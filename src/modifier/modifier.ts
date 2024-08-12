@@ -28,6 +28,7 @@ import i18next from "i18next";
 
 import { allMoves } from "#app/data/move.js";
 import { Abilities } from "#app/enums/abilities.js";
+import { Aura, AuraType, ConvertAuraToBattleStat } from "#app/data/mystery-encounters/mystery-encounter-data";
 
 export type ModifierPredicate = (modifier: Modifier) => boolean;
 
@@ -323,29 +324,106 @@ export abstract class LapsingPersistentModifier extends PersistentModifier {
   }
 }
 
-export class AuraModifier extends LapsingPersistentModifier {
-  constructor(type: ModifierTypes.AuraModifierType, battlesLeft: number) {
-    super(type, battlesLeft);
+export class LapsingAuraModifier extends LapsingPersistentModifier {
+  private aura: Aura;
+
+  constructor(type: ModifierTypes.LapsingAuraModifierType, aura: Aura) {
+    super(type, aura.duration);
+    this.aura = aura;
   }
 
-  match(modifier: Modifier): boolean {
-    if (modifier instanceof AuraModifier) {
-      // Check type id to not match different tiers of lures
-      return modifier.type.id === this.type.id && modifier.battlesLeft === this.battlesLeft;
-    }
-    return false;
-  }
-
-  clone(): AuraModifier {
-    return new AuraModifier(this.type as ModifierTypes.AuraModifierType, this.battlesLeft);
+  clone(): LapsingAuraModifier {
+    return new LapsingAuraModifier(this.type as ModifierTypes.LapsingAuraModifierType, this.aura);
   }
 
   getArgs(): any[] {
-    return [this.battlesLeft];
+    return [this.aura];
+  }
+
+  lapse(): boolean {
+
+    return true;
+  }
+
+  shouldApply(args: any[]): boolean {
+    return true;
+  }
+
+  apply(args: any[]): boolean { // args[0] will be an aura
+    const aura = args[0] as Aura;
+    //if (pokemon) { // this is for pokemon specific auras
+    switch (aura.auraType) {
+    case AuraType.ATK:
+    case AuraType.DEF:
+    case AuraType.SPATK:
+    case AuraType.SPDEF:
+    case AuraType.ACC:
+    case AuraType.EVA: // need to deal with EVA since there's no temp version of it
+    case AuraType.SPD:
+    case AuraType.CRIT:
+      const tempBattleStat = args[0] as TempBattleStat;
+      const auraType = ConvertAuraToBattleStat(this.aura.auraType);
+      if (auraType >= 0) {
+        if (tempBattleStat === auraType as TempBattleStat) {
+          const currentStatLevel = args[1] as Utils.IntegerHolder;
+          currentStatLevel.value = Math.min(currentStatLevel.value + aura.auraStrength, 6);
+          return true;
+        }
+
+        return false;
+      }
+      break;
+    case AuraType.XP:
+      // do XP stuff
+      break;
+    case AuraType.PP:
+      // do PP stuff
+      break;
+    case AuraType.PASSIVE:
+      //do passive stuff
+      break;
+    }
+    //}
+    //else { // this is for player/team specific auras
+    switch (aura.auraType) {
+    case AuraType.INCOME:
+      // do income stuff
+      break;
+    case AuraType.MONEY:
+      // do instant money stuff
+      break;
+    case AuraType.LUCK:
+      // do luck stuff
+      break;
+    case AuraType.XP:
+      // do XP stuff
+      break;
+    case AuraType.CANDY:
+      // do instant candy stuff
+      break;
+    }
+    //}
+
+    return true;
+
+  }
+}
+
+export class PersistentAuraModifier extends PersistentModifier {
+  constructor(type: ModifierType, stackCount?: number) {
+    super(type, stackCount);
+  }
+
+  clone(): PersistentAuraModifier {
+    return new PersistentAuraModifier(this.type, this.stackCount);
   }
 
   apply(args: any[]): boolean {
     return true;
+  }
+
+  getMaxStackCount(): number { // auras don't stack
+    return 1;
   }
 }
 

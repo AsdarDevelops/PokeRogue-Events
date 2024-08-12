@@ -4,6 +4,7 @@ import { BASE_MYSTERY_ENCOUNTER_SPAWN_WEIGHT } from "#app/data/mystery-encounter
 import { isNullOrUndefined } from "#app/utils";
 import { EnemyPokemon, PlayerPokemon } from "field/pokemon";
 import BattleScene from "../../battle-scene";
+import { TempBattleStat } from "#app/data/temp-battle-stat";
 
 export class MysteryEncounterData {
   encounteredEvents: [MysteryEncounterType, MysteryEncounterTier][] = [];
@@ -159,7 +160,8 @@ export enum AuraType {
   XP,
   CANDY,
   PP,
-  PASSIVE
+  PASSIVE,
+  CRIT
 }
 
 export function getAuraName(aura: AuraType) {
@@ -192,9 +194,35 @@ export function getAuraName(aura: AuraType) {
     return "PP";
   case AuraType.PASSIVE:
     return "PASSIVE";
+  case AuraType.CRIT:
+    return "CRIT";
   default:
     return "???";
   }
 }
 
+export function ConvertAuraToBattleStat(auraType: AuraType): Number {
+  switch (auraType) {
+  case AuraType.ATK:
+    return TempBattleStat.ATK;
+  case AuraType.DEF:
+    return TempBattleStat.DEF;
+  case AuraType.SPATK:
+    return TempBattleStat.SPATK;
+  case AuraType.SPDEF:
+    return TempBattleStat.SPDEF;
+  case AuraType.ACC:
+    return TempBattleStat.ACC;
+  case AuraType.EVA:
+    return -1;
+  case AuraType.SPD:
+    return TempBattleStat.SPD;
+  case AuraType.CRIT:
+    return TempBattleStat.CRIT;
+  default:
+    return -1;
+  }
+}
+
 export const auraStatMap = [AuraType.ATK, AuraType.DEF, AuraType.SPATK, AuraType.SPDEF, AuraType.ACC, AuraType.EVA, AuraType.SPD];
+

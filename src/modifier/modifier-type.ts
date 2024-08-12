@@ -413,11 +413,24 @@ export class RememberMoveModifierType extends PokemonModifierType {
   }
 }
 
-export class AuraModifierType extends ModifierType {
-  private myAuraData: any;
+export class LapsingAuraModifierType extends ModifierType {
+  private myAuraData: Aura;
 
   constructor(localeKey: string, iconImage: string, myAuraData?: Aura) {
-    super(localeKey, iconImage, () => new Modifiers.AuraModifier(this, myAuraData));
+    super(localeKey, iconImage, () => new Modifiers.LapsingAuraModifier(this, myAuraData));
+    this.myAuraData = myAuraData;
+  }
+
+  getDescription(scene: BattleScene): string {
+    return i18next.t("modifierType:ModifierType.AugmentModifierType.description", { myAuraData: this.myAuraData });
+  }
+}
+
+export class PersistentAuraModifierType extends ModifierType {
+  private myAuraData: Aura;
+
+  constructor(localeKey: string, iconImage: string, myAuraData?: Aura) {
+    super(localeKey, iconImage, () => new Modifiers.PersistentAuraModifier(this, myAuraData));
 
     this.myAuraData = myAuraData;
   }
@@ -1217,7 +1230,7 @@ export const modifierTypes = {
   SUPER_REPEL: () => new DoubleBattleChanceBoosterModifierType('Super Repel', 10),
   MAX_REPEL: () => new DoubleBattleChanceBoosterModifierType('Max Repel', 25),*/
 
-  AURA_STAT: () => new AuraModifierType("aura_stat_EVA", "lucarionite"),
+  AURA_STAT: () => new LapsingAuraModifierType("aura_stat_EVA", "lucarionite"),
 
   LURE: () => new DoubleBattleChanceBoosterModifierType("modifierType:ModifierType.LURE", "lure", 5),
   SUPER_LURE: () => new DoubleBattleChanceBoosterModifierType("modifierType:ModifierType.SUPER_LURE", "super_lure", 10),
