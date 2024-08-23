@@ -22,7 +22,7 @@ import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 const namespace = "mysteryEncounter:bugTypeSuperfan";
 
 /**
- * Mysterious Challengers encounter.
+ * Bug Type Superfan encounter.
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/132 | GitHub Issue #132}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
