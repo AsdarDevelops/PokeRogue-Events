@@ -82,12 +82,12 @@ body:
         - Other
     validations:
       required: true
-    - type: markdown
-      attributes:
-        value: |
-          ---
-    - type: textarea
-      id: additional-context
-      attributes:
-        label: Additional context
-        description: Add any other context about the problem here.
+  - type: markdown
+    attributes:
+      value: |
+        ---
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
