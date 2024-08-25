@@ -68,7 +68,7 @@ body:
         - Other
     validations:
       required: true
-      - type: dropdown
+  - type: dropdown
     id: browser
     attributes:
       label: Which browser do you use?
