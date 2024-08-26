@@ -1,0 +1,6 @@
+uses: soichisumi/issue-copy-action@v0.2.0
+with:
+  keyword: "/copy"
+  targetRepository: ben-lear/pokerogue
+  githubToken: ${{ secrets.GITHUB_TOKEN }}
+  contentOfNewIssue: ''
