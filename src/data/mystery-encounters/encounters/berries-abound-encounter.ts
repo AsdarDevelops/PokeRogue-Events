@@ -143,7 +143,7 @@ export const BerriesAboundEncounter: MysteryEncounter =
         const shopOptions: ModifierTypeOption[] = [];
         for (let i = 0; i < 5; i++) {
           // Generate shop berries
-          shopOptions.push(generateModifierTypeOption(scene, modifierTypes.BERRY));
+          shopOptions.push(generateModifierTypeOption(scene, modifierTypes.BERRY)!);
         }
 
         setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, undefined, doBerryRewards);
@@ -168,7 +168,7 @@ export const BerriesAboundEncounter: MysteryEncounter =
           const shopOptions: ModifierTypeOption[] = [];
           for (let i = 0; i < 5; i++) {
             // Generate shop berries
-            shopOptions.push(generateModifierTypeOption(scene, modifierTypes.BERRY));
+            shopOptions.push(generateModifierTypeOption(scene, modifierTypes.BERRY)!);
           }
 
           if (speedDiff < 1) {

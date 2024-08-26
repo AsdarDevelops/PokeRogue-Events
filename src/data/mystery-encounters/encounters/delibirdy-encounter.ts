@@ -259,7 +259,6 @@ export const DelibirdyEncounter: MysteryEncounter =
             });
           };
 
-          // Only Pokemon that can gain benefits are above 1/3rd HP with no status
           const selectableFilter = (pokemon: Pokemon) => {
             // If pokemon meets primary pokemon reqs, it can be selected
             const meetsReqs = encounter.options[2].pokemonMeetsPrimaryRequirements(scene, pokemon);

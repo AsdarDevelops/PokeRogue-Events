@@ -380,17 +380,16 @@ export function updatePlayerMoney(scene: BattleScene, changeValue: number, playS
  * @param modifier
  * @param pregenArgs - can specify BerryType for berries, TM for TMs, AttackBoostType for item, etc.
  */
-export function generateModifierType(scene: BattleScene, modifier: () => ModifierType, pregenArgs?: any[]): ModifierType {
+export function generateModifierType(scene: BattleScene, modifier: () => ModifierType, pregenArgs?: any[]): ModifierType | null {
   const modifierId = Object.keys(modifierTypes).find(k => modifierTypes[k] === modifier)!;
-  let result: ModifierType = modifierTypes[modifierId]?.();
+  let result: ModifierType = modifierTypes[modifierId]();
 
   // Populates item id and tier (order matters)
   result = result
     .withIdFromFunc(modifierTypes[modifierId])
     .withTierFromPool();
 
-  const generatedResult = result instanceof ModifierTypeGenerator ? result.generateType(scene.getParty(), pregenArgs) : result;
-  return generatedResult ?? result;
+  return result instanceof ModifierTypeGenerator ? result.generateType(scene.getParty(), pregenArgs) : result;
 }
 
 /**
@@ -399,8 +398,11 @@ export function generateModifierType(scene: BattleScene, modifier: () => Modifie
  * @param modifier
  * @param pregenArgs - can specify BerryType for berries, TM for TMs, AttackBoostType for item, etc.
  */
-export function generateModifierTypeOption(scene: BattleScene, modifier: () => ModifierType, pregenArgs?: any[]): ModifierTypeOption {
+export function generateModifierTypeOption(scene: BattleScene, modifier: () => ModifierType, pregenArgs?: any[]): ModifierTypeOption | null {
   const result = generateModifierType(scene, modifier, pregenArgs);
+  if (!result) {
+    return null;
+  }
   return new ModifierTypeOption(result, 0);
 }
 
@@ -416,7 +418,7 @@ export function selectPokemonForOption(scene: BattleScene, onPokemonSelected: (p
   return new Promise(resolve => {
     const modeToSetOnExit = scene.ui.getMode();
 
-    // Open party screen to choose pokemon to train
+    // Open party screen to choose pokemon
     scene.ui.setMode(Mode.PARTY, PartyUiMode.SELECT, -1, (slotIndex: integer, option: PartyOption) => {
       if (slotIndex < scene.getParty().length) {
         scene.ui.setMode(modeToSetOnExit).then(() => {
@@ -446,7 +448,7 @@ export function selectPokemonForOption(scene: BattleScene, onPokemonSelected: (p
                 label: i18next.t("menu:cancel"),
                 handler: () => {
                   scene.ui.clearText();
-                  scene.ui.setMode(Mode.MYSTERY_ENCOUNTER);
+                  scene.ui.setMode(modeToSetOnExit);
                   resolve(false);
                   return true;
                 },
@@ -461,6 +463,11 @@ export function selectPokemonForOption(scene: BattleScene, onPokemonSelected: (p
                 yOffset: 0,
                 supportHover: true
               };
+
+              // Do hover over the starting selection option
+              if (fullOptions[0].onHover) {
+                fullOptions[0].onHover();
+              }
               scene.ui.setModeWithoutClear(Mode.OPTION_SELECT, config, null, true);
             };
 
@@ -481,6 +488,97 @@ export function selectPokemonForOption(scene: BattleScene, onPokemonSelected: (p
         });
       }
     }, selectablePokemonFilter);
+  });
+}
+
+interface PokemonAndOptionSelected {
+  selectedPokemonIndex: number;
+  selectedOptionIndex: number;
+}
+
+/**
+ * This function is intended for use inside onPreOptionPhase() of an encounter option
+ * @param scene
+ * If a second option needs to be selected, onPokemonSelected should return a OptionSelectItem[] object
+ * @param options
+ * @param optionSelectPromptKey
+ * @param selectablePokemonFilter
+ * @param onHoverOverCancelOption
+ */
+export function selectOptionThenPokemon(scene: BattleScene, options: OptionSelectItem[], optionSelectPromptKey: string, selectablePokemonFilter?: PokemonSelectFilter, onHoverOverCancelOption?: () => void): Promise<PokemonAndOptionSelected | null> {
+  return new Promise<PokemonAndOptionSelected | null>(resolve => {
+    const modeToSetOnExit = scene.ui.getMode();
+
+    const displayOptions = (config: OptionSelectConfig) => {
+      scene.ui.setMode(Mode.MESSAGE).then(() => {
+        if (!optionSelectPromptKey) {
+          // Do hover over the starting selection option
+          if (fullOptions[0].onHover) {
+            fullOptions[0].onHover();
+          }
+          scene.ui.setMode(Mode.OPTION_SELECT, config);
+        } else {
+          showEncounterText(scene, optionSelectPromptKey).then(() => {
+            // Do hover over the starting selection option
+            if (fullOptions[0].onHover) {
+              fullOptions[0].onHover();
+            }
+            scene.ui.setMode(Mode.OPTION_SELECT, config);
+          });
+        }
+      });
+    };
+
+    const selectPokemonAfterOption = (selectedOptionIndex: number) => {
+      // Open party screen to choose a Pokemon
+      scene.ui.setMode(Mode.PARTY, PartyUiMode.SELECT, -1, (slotIndex: integer, option: PartyOption) => {
+        if (slotIndex < scene.getParty().length) {
+          // Pokemon and option selected
+          scene.ui.setMode(modeToSetOnExit).then(() => {
+            const result: PokemonAndOptionSelected = { selectedPokemonIndex: slotIndex, selectedOptionIndex: selectedOptionIndex };
+            resolve(result);
+          });
+        } else {
+          // Back to first option select screen
+          displayOptions(config);
+        }
+      }, selectablePokemonFilter);
+    };
+
+    // Always appends a cancel option to bottom of options
+    const fullOptions = options.map((option, index) => {
+      // Update handler to resolve promise
+      const onSelect = option.handler;
+      option.handler = () => {
+        onSelect();
+        selectPokemonAfterOption(index);
+        return true;
+      };
+      return option;
+    }).concat({
+      label: i18next.t("menu:cancel"),
+      handler: () => {
+        scene.ui.clearText();
+        scene.ui.setMode(modeToSetOnExit);
+        resolve(null);
+        return true;
+      },
+      onHover: () => {
+        if (onHoverOverCancelOption) {
+          onHoverOverCancelOption();
+        }
+        scene.ui.showText(i18next.t("mysteryEncounter:cancel_option"));
+      }
+    });
+
+    const config: OptionSelectConfig = {
+      options: fullOptions,
+      maxOptions: 7,
+      yOffset: 0,
+      supportHover: true
+    };
+
+    displayOptions(config);
   });
 }
 

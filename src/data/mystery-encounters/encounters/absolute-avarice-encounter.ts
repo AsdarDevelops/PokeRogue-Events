@@ -245,7 +245,7 @@ export const AbsoluteAvariceEncounter: MysteryEncounter =
           const encounter = scene.currentBattle.mysteryEncounter;
 
           // Provides 1x Reviver Seed to each party member at end of battle
-          const revSeed = generateModifierType(scene, modifierTypes.REVIVER_SEED);
+          const revSeed = generateModifierType(scene, modifierTypes.REVIVER_SEED)!;
           const givePartyPokemonReviverSeeds = () => {
             const party = scene.getParty();
             party.forEach(p => {

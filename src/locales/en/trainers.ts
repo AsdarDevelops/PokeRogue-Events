@@ -56,6 +56,7 @@ export const trainerClasses: SimpleTranslationEntries = {
   "breeder": "Breeder",
   "breeder_female": "Breeder",
   "breeders": "Breeders",
+  "bug_type_superfan": "Bug-Type Superfan",
   "clerk": "Clerk",
   "clerk_female": "Clerk",
   "colleagues": "Colleagues",
