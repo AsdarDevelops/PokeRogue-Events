@@ -29,7 +29,7 @@ How much does the Event help you to __permanently unlock__:
 
   If you want to add an Event that gives you any of this, it's going to automatically go to 🟡 Ultra or 🔴 Rogue. And the further down the list, the more likely it will have to be 🔴 Rogue instead of 🟡 Ultra.
 
-  For example, __Dark Deal__ is a 🔴 Rogue Event, because it gives you a chance to capture a very powerful PKMN and permanently add it to your Box. Whereas __Mysterious Challenger__, even it might have you fight a very, very strong trainer on the "Brutal Fight", will just give you an item that will stay with you within the boundaries of that run, hence why it could be 🔵 Great or ⚪ Common.
+  For example, __Dark Deal__ is a 🔴 Rogue Event, because it gives you a chance to capture a very powerful PKMN and permanently add it to your Box. Whereas __Mysterious Challenger__, even it might have you fight a very, very strong trainer on the "Brutal Fight", will just give you an item that will stay with you within the boundaries of that run, hence why it could be 🔵 Great or even ⚪ Common.
 
   Note: Bear in mind not even a 🔴 Rogue Event guarantees a shiny at the time of writing.
 
@@ -39,23 +39,25 @@ Imagine an Event at wave 12, a mysterious man offers to throw a coin in front of
 - Heads: you win the run, get all the pokécandies as if you had won, and the final boss bows to your power.
 - Tails: you die horribly and lose the run.
 
-How often do you think this Event should happen? "Never" is the right answer, BUT the lesson here is that this Event would lean towards 🔴 Rogue rather than ⚪ Common, because it's repercussions are so, so much more meaningful than simply encountering your usual wild Pokémon fight. If you want to propose a swingy Event, that's fine, but know that the harder the swings, the higher the rarity.
+How often do you think this Event should happen? "Never" is the right answer. But the lesson here is that this Event would lean towards 🔴 Rogue rather than ⚪ Common, because it's repercussions are so, so much more meaningful than simply encountering your usual wild Pokémon fight. If you want to propose a swingy Event, that's fine, but know that the harder the swings, the higher the rarity. Also consider how negative swinginess (against the player) is more impactful late than early, and positive swinginess (towards the player, getting an OP item) is more impactful early than late.
 
 - Example: ⚪ "Fight or Flight" will have you fight a boss PKMN from the biome, for a somewhat good reward. You will rarely win or lose your run here.
 - Example: 🔴 "Dark Deal" will remove a Pokémon from your party. This can be your best Pokémon at the time. You **__can catch a legendary__** which is good for the run, and your box, but you also very well **__can lose the run and not catch anything__**
 
 ### Requirements (Somewhat Important)
-If an Event is Space Biome only and it needs you to have a Steel type with the moves Extreme Speed and Pluck and the ability Levitate because you need your Pokémon to fix a rocket on the fly, it might very well be ⚪ and still almost no one should find it. Because of this, **in some exceptional cases** you might see an Event with a catchable Mythical Pokémon in a 🟡 Ultra Event. This is because the Biome requirement itself and the other factors are making it much harder to appear. 
+If an Event is Space Biome only (super hard to get to biome at the time of writing) and it needs you to have a Steel type with the moves Extreme Speed and Pluck and the ability Levitate because you need your Pokémon to fix a rocket on the fly, it might very well be ⚪ and still almost no one should find it. Because of this, **in some exceptional cases** you might see an Event with a catchable Mythical Pokémon in a 🟡 Ultra Event. This is because the Biome requirement itself and the other factors are making it much harder to appear (in fact it may still be harder to get to than a 🔴, because maths). 
 
-__Thus, the more requirements an Event has to even proc, the more it can lean towards ⚪__
+__Thus, the more requirements, especially Biome requirements, an Event has to even proc, the more it can lean towards ⚪__
 
 ### Simplicity (Somewhat Important)
 
 __The simpler the Event is at first glance **to the player**, the more it can lean towards ⚪ Common__.
 Pretty straightforward, and useful when you're dealing with doubts between ⚪ Common or 🔵 Great. 
 
-### What the Event rewards you with (**NOT** Important)
+### What the Event rewards you with (**NOT so** Important)
 "Wait, what?"
+
+The only rule of thumb is that __Meta Progression__ should be 🔴 or 🟡 and t
 
 __Excluding Meta Progression__ and __Swinginess__, I couldn't care less what the Event is handling you, it can very well be a Master-Ball __as long as the price you pay for it is right on par with it__. So go wild.
 
@@ -109,7 +111,16 @@ They are: TOWN, PLAINS, GRASS, TALL_GRASS, METROPOLIS, BEACH, LAKE, MEADOW, POWE
 
 You can use these tags, or the specific Biome, or a combination of both, to let us know where you'd like the Event to happen.
 
-## Options
+## Options 1️⃣2️⃣3️⃣4️⃣
+
+**__MEs should be more than just accept/refuse__**. Now, this is a rule that is sometimes necessarily broken, but 99% of the proposals I read go like this:
+
+"An ME where a trainer offers you to battle and if you win you get a megastone/mega-bracelet".
+
+__**BORING!**__. What if my team is simply never gonna run a mega? What if I'm too weak to fight? Can't I convince the trainer to gift it to me? Perhaps I use a Pokémon move! Can't I pay for the stone? I have money!
+
+As a rule of thumb, try to at least have 3 options: "Option 1" + "Option2" + "Refuse"
+__OR__ 
 
 For now, I'll leave this as a WIP as we are still ironing out the details of what __can__ be done with Events, so just let your imagination run wild. __**Maximum of 4 selectable options at a time though, as that's what the UI can handle**__.
 
