@@ -15,7 +15,7 @@ import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import { PartyMemberStrength } from "#enums/party-member-strength";
 import BattleScene from "#app/battle-scene";
 import * as Utils from "#app/utils";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 
 /** the i18n namespace for the encounter */
@@ -26,7 +26,7 @@ const namespace = "mysteryEncounter:mysteriousChallengers";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/41 | GitHub Issue #41}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const MysteriousChallengersEncounter: IMysteryEncounter =
+export const MysteriousChallengersEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.MYSTERIOUS_CHALLENGERS)
     .withEncounterTier(MysteryEncounterTier.GREAT)
     .withSceneWaveRangeRequirement(10, 180) // waves 10 to 180
@@ -87,6 +87,7 @@ export const MysteriousChallengersEncounter: IMysteryEncounter =
       const e4Template = trainerPartyTemplates.ELITE_FOUR;
       const brutalConfig = trainerConfigs[brutalTrainerType].copy();
       brutalConfig.setPartyTemplates(e4Template);
+      // @ts-ignore
       brutalConfig.partyTemplateFunc = null; // Overrides gym leader party template func
       female = false;
       if (brutalConfig.hasGenders) {

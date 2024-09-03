@@ -10,7 +10,7 @@ import { MysteriousChestEncounter } from "./encounters/mysterious-chest-encounte
 import { ShadyVitaminDealerEncounter } from "./encounters/shady-vitamin-dealer-encounter";
 import { SlumberingSnorlaxEncounter } from "./encounters/slumbering-snorlax-encounter";
 import { TrainingSessionEncounter } from "./encounters/training-session-encounter";
-import IMysteryEncounter from "./mystery-encounter";
+import MysteryEncounter from "./mystery-encounter";
 import { SafariZoneEncounter } from "#app/data/mystery-encounters/encounters/safari-zone-encounter";
 import { FieryFalloutEncounter } from "#app/data/mystery-encounters/encounters/fiery-fallout-encounter";
 import { TheStrongStuffEncounter } from "#app/data/mystery-encounters/encounters/the-strong-stuff-encounter";
@@ -25,6 +25,7 @@ import { ClowningAroundEncounter } from "#app/data/mystery-encounters/encounters
 import { PartTimerEncounter } from "#app/data/mystery-encounters/encounters/part-timer-encounter";
 import { DancingLessonsEncounter } from "#app/data/mystery-encounters/encounters/dancing-lessons-encounter";
 import { WeirdDreamEncounter } from "#app/data/mystery-encounters/encounters/weird-dream-encounter";
+import { TheWinstrateChallengeEncounter } from "#app/data/mystery-encounters/encounters/the-winstrate-challenge-encounter";
 
 // Spawn chance: (BASE_MYSTERY_ENCOUNTER_SPAWN_WEIGHT + WIGHT_INCREMENT_ON_SPAWN_MISS * <number of missed spawns>) / 256
 export const BASE_MYSTERY_ENCOUNTER_SPAWN_WEIGHT = 1;
@@ -132,7 +133,7 @@ export const CIVILIZATION_ENCOUNTER_BIOMES = [
   Biome.ISLAND
 ];
 
-export const allMysteryEncounters: { [encounterType: number]: IMysteryEncounter } = {};
+export const allMysteryEncounters: { [encounterType: number]: MysteryEncounter } = {};
 
 
 const extremeBiomeEncounters: MysteryEncounterType[] = [];
@@ -147,6 +148,7 @@ const humanTransitableBiomeEncounters: MysteryEncounterType[] = [
   MysteryEncounterType.SHADY_VITAMIN_DEALER,
   MysteryEncounterType.THE_POKEMON_SALESMAN,
   MysteryEncounterType.AN_OFFER_YOU_CANT_REFUSE,
+  MysteryEncounterType.THE_WINSTRATE_CHALLENGE
 ];
 
 const civilizationBiomeEncounters: MysteryEncounterType[] = [
@@ -270,12 +272,13 @@ export function initMysteryEncounters() {
   allMysteryEncounters[MysteryEncounterType.PART_TIMER] = PartTimerEncounter;
   allMysteryEncounters[MysteryEncounterType.DANCING_LESSONS] = DancingLessonsEncounter;
   allMysteryEncounters[MysteryEncounterType.WEIRD_DREAM] = WeirdDreamEncounter;
+  allMysteryEncounters[MysteryEncounterType.THE_WINSTRATE_CHALLENGE] = TheWinstrateChallengeEncounter;
 
   // Add extreme encounters to biome map
   extremeBiomeEncounters.forEach(encounter => {
     EXTREME_ENCOUNTER_BIOMES.forEach(biome => {
       const encountersForBiome = mysteryEncountersByBiome.get(biome);
-      if (!encountersForBiome.includes(encounter)) {
+      if (encountersForBiome && !encountersForBiome.includes(encounter)) {
         encountersForBiome.push(encounter);
       }
     });
@@ -284,7 +287,7 @@ export function initMysteryEncounters() {
   nonExtremeBiomeEncounters.forEach(encounter => {
     NON_EXTREME_ENCOUNTER_BIOMES.forEach(biome => {
       const encountersForBiome = mysteryEncountersByBiome.get(biome);
-      if (!encountersForBiome.includes(encounter)) {
+      if (encountersForBiome && !encountersForBiome.includes(encounter)) {
         encountersForBiome.push(encounter);
       }
     });
@@ -293,7 +296,7 @@ export function initMysteryEncounters() {
   humanTransitableBiomeEncounters.forEach(encounter => {
     HUMAN_TRANSITABLE_BIOMES.forEach(biome => {
       const encountersForBiome = mysteryEncountersByBiome.get(biome);
-      if (!encountersForBiome.includes(encounter)) {
+      if (encountersForBiome && !encountersForBiome.includes(encounter)) {
         encountersForBiome.push(encounter);
       }
     });
@@ -302,7 +305,7 @@ export function initMysteryEncounters() {
   civilizationBiomeEncounters.forEach(encounter => {
     CIVILIZATION_ENCOUNTER_BIOMES.forEach(biome => {
       const encountersForBiome = mysteryEncountersByBiome.get(biome);
-      if (!encountersForBiome.includes(encounter)) {
+      if (encountersForBiome && !encountersForBiome.includes(encounter)) {
         encountersForBiome.push(encounter);
       }
     });

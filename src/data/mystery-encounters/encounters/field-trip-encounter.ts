@@ -7,7 +7,7 @@ import { modifierTypes } from "#app/modifier/modifier-type";
 import { OptionSelectItem } from "#app/ui/abstact-option-select-ui-handler";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 
@@ -19,7 +19,7 @@ const namespace = "mysteryEncounter:fieldTrip";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/17 | GitHub Issue #17}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const FieldTripEncounter: IMysteryEncounter =
+export const FieldTripEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.FIELD_TRIP)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(10, 180)
@@ -54,8 +54,8 @@ export const FieldTripEncounter: IMysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
         .withDialogue({
           buttonLabel: `${namespace}.option.1.label`,
           buttonTooltip: `${namespace}.option.1.tooltip`,
@@ -78,7 +78,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   const correctMove = move.getMove().category === MoveCategory.PHYSICAL;
                   encounter.setDialogueToken("moveCategory", "Physical");
                   if (!correctMove) {
-                    encounter.options[0].dialogue.selected = [
+                    encounter.options[0].dialogue!.selected = [
                       {
                         text: `${namespace}.option.incorrect`,
                         speaker: `${namespace}.speaker`,
@@ -97,7 +97,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   } else {
                     encounter.setDialogueToken("pokeName", pokemon.getNameToRender());
                     encounter.setDialogueToken("move", move.getName());
-                    encounter.options[0].dialogue.selected = [
+                    encounter.options[0].dialogue!.selected = [
                       {
                         text: `${namespace}.option.selected`,
                       },
@@ -140,8 +140,8 @@ export const FieldTripEncounter: IMysteryEncounter =
         .build()
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
         .withDialogue({
           buttonLabel: `${namespace}.option.2.label`,
           buttonTooltip: `${namespace}.option.2.tooltip`,
@@ -164,7 +164,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   const correctMove = move.getMove().category === MoveCategory.SPECIAL;
                   encounter.setDialogueToken("moveCategory", "Special");
                   if (!correctMove) {
-                    encounter.options[1].dialogue.selected = [
+                    encounter.options[1].dialogue!.selected = [
                       {
                         text: `${namespace}.option.incorrect`,
                         speaker: `${namespace}.speaker`,
@@ -189,7 +189,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   } else {
                     encounter.setDialogueToken("pokeName", pokemon.getNameToRender());
                     encounter.setDialogueToken("move", move.getName());
-                    encounter.options[1].dialogue.selected = [
+                    encounter.options[1].dialogue!.selected = [
                       {
                         text: `${namespace}.option.selected`,
                       },
@@ -232,8 +232,8 @@ export const FieldTripEncounter: IMysteryEncounter =
         .build()
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
         .withDialogue({
           buttonLabel: `${namespace}.option.3.label`,
           buttonTooltip: `${namespace}.option.3.tooltip`,
@@ -256,7 +256,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   const correctMove = move.getMove().category === MoveCategory.STATUS;
                   encounter.setDialogueToken("moveCategory", "Status");
                   if (!correctMove) {
-                    encounter.options[2].dialogue.selected = [
+                    encounter.options[2].dialogue!.selected = [
                       {
                         text: `${namespace}.option.incorrect`,
                         speaker: `${namespace}.speaker`,
@@ -275,7 +275,7 @@ export const FieldTripEncounter: IMysteryEncounter =
                   } else {
                     encounter.setDialogueToken("pokeName", pokemon.getNameToRender());
                     encounter.setDialogueToken("move", move.getName());
-                    encounter.options[2].dialogue.selected = [
+                    encounter.options[2].dialogue!.selected = [
                       {
                         text: `${namespace}.option.selected`,
                       },

@@ -1,7 +1,7 @@
 import { BattleStat } from "#app/data/battle-stat";
 import { MysteryEncounterOptionBuilder } from "#app/data/mystery-encounters/mystery-encounter-option";
 import {
-  EnemyPartyConfig, generateModifierTypeOption,
+  EnemyPartyConfig, generateModifierType, generateModifierTypeOption,
   initBattleWithEnemyConfig,
   leaveEncounterWithoutBattle, setEncounterExp,
   setEncounterRewards
@@ -19,7 +19,7 @@ import { randSeedInt } from "#app/utils";
 import { BattlerTagType } from "#enums/battler-tag-type";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { queueEncounterMessage, showEncounterText } from "#app/data/mystery-encounters/utils/encounter-dialogue-utils";
 import { getPokemonNameWithAffix } from "#app/messages";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
@@ -40,7 +40,7 @@ const namespace = "mysteryEncounter:berriesAbound";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/24 | GitHub Issue #24}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const BerriesAboundEncounter: IMysteryEncounter =
+export const BerriesAboundEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.BERRIES_ABOUND)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(10, 180) // waves 10 to 180
@@ -146,7 +146,7 @@ export const BerriesAboundEncounter: IMysteryEncounter =
 
       // Calculate boss mon
       const bossSpecies = scene.arena.randomSpecies(scene.currentBattle.waveIndex, scene.currentBattle.waveIndex, 0, getPartyLuckValue(scene.getParty()), true);
-      const bossPokemon = new EnemyPokemon(scene, bossSpecies, scene.currentBattle.waveIndex, TrainerSlot.NONE, true, null);
+      const bossPokemon = new EnemyPokemon(scene, bossSpecies, scene.currentBattle.waveIndex, TrainerSlot.NONE, true);
       encounter.setDialogueToken("enemyPokemon", getPokemonNameWithAffix(bossPokemon));
       const config: EnemyPartyConfig = {
         levelAdditiveMultiplier: 1,
@@ -222,13 +222,13 @@ export const BerriesAboundEncounter: IMysteryEncounter =
           shopOptions.push(generateModifierTypeOption(scene, modifierTypes.BERRY));
         }
 
-        setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, null, doBerryRewards);
+        setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, undefined, doBerryRewards);
         await initBattleWithEnemyConfig(scene, scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0]);
       }
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
         .withDialogue({
           buttonLabel: `${namespace}.option.2.label`,
           buttonTooltip: `${namespace}.option.2.tooltip`
@@ -262,12 +262,12 @@ export const BerriesAboundEncounter: IMysteryEncounter =
             };
 
             const config = scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0];
-            config.pokemonConfigs[0].tags = [BattlerTagType.MYSTERY_ENCOUNTER_POST_SUMMON];
-            config.pokemonConfigs[0].mysteryEncounterBattleEffects = (pokemon: Pokemon) => {
+            config.pokemonConfigs![0].tags = [BattlerTagType.MYSTERY_ENCOUNTER_POST_SUMMON];
+            config.pokemonConfigs![0].mysteryEncounterBattleEffects = (pokemon: Pokemon) => {
               queueEncounterMessage(pokemon.scene, `${namespace}.option.2.boss_enraged`);
               pokemon.scene.unshiftPhase(new StatChangePhase(pokemon.scene, pokemon.getBattlerIndex(), true, [BattleStat.ATK, BattleStat.DEF, BattleStat.SPATK, BattleStat.SPDEF, BattleStat.SPD], 1));
             };
-            setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, null, doBerryRewards);
+            setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, undefined, doBerryRewards);
             await showEncounterText(scene, `${namespace}.option.2.selected_bad`);
             await initBattleWithEnemyConfig(scene, config);
             return;
@@ -287,8 +287,8 @@ export const BerriesAboundEncounter: IMysteryEncounter =
               }
             };
 
-            setEncounterExp(scene, fastestPokemon.id, encounter.enemyPartyConfigs[0].pokemonConfigs[0].species.baseExp);
-            setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, null, doFasterBerryRewards);
+            setEncounterExp(scene, fastestPokemon.id, encounter.enemyPartyConfigs[0].pokemonConfigs![0].species.baseExp);
+            setEncounterRewards(scene, { guaranteedModifierTypeOptions: shopOptions, fillRemaining: false }, undefined, doFasterBerryRewards);
             await showEncounterText(scene, `${namespace}.option.2.selected`);
             leaveEncounterWithoutBattle(scene);
           }
@@ -315,7 +315,7 @@ export const BerriesAboundEncounter: IMysteryEncounter =
 
 async function tryGiveBerry(scene: BattleScene, prioritizedPokemon?: PlayerPokemon) {
   const berryType = randSeedInt(Object.keys(BerryType).filter(s => !isNaN(Number(s))).length) as BerryType;
-  const berry = generateModifierTypeOption(scene, modifierTypes.BERRY, [berryType]).type as BerryModifierType;
+  const berry = generateModifierType(scene, modifierTypes.BERRY, [berryType]) as BerryModifierType;
 
   const party = scene.getParty();
 

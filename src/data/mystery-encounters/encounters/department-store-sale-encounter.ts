@@ -2,12 +2,12 @@ import {
   leaveEncounterWithoutBattle,
   setEncounterRewards,
 } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { modifierTypes } from "#app/modifier/modifier-type";
+import { ModifierTypeFunc, modifierTypes } from "#app/modifier/modifier-type";
 import { randSeedInt } from "#app/utils";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import { Species } from "#enums/species";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, {
+import MysteryEncounter, {
   MysteryEncounterBuilder,
 } from "../mystery-encounter";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
@@ -20,7 +20,7 @@ const namespace = "mysteryEncounter:departmentStoreSale";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/33 | GitHub Issue #33}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const DepartmentStoreSaleEncounter: IMysteryEncounter =
+export const DepartmentStoreSaleEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.DEPARTMENT_STORE_SALE)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(10, 100)
@@ -32,8 +32,8 @@ export const DepartmentStoreSaleEncounter: IMysteryEncounter =
         x: -20,
       },
       {
-        spriteKey: null,
-        fileRoot: null,
+        spriteKey: "",
+        fileRoot: "",
         species: Species.FURFROU,
         hasShadow: true,
         repeat: true,
@@ -60,7 +60,7 @@ export const DepartmentStoreSaleEncounter: IMysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Choose TMs
-        const modifiers = [];
+        const modifiers: ModifierTypeFunc[] = [];
         let i = 0;
         while (i < 4) {
           // 2/2/1 weight on TM rarity
@@ -86,7 +86,7 @@ export const DepartmentStoreSaleEncounter: IMysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Choose Vitamins
-        const modifiers = [];
+        const modifiers: ModifierTypeFunc[] = [];
         let i = 0;
         while (i < 3) {
           // 2/1 weight on base stat booster vs PP Up
@@ -110,7 +110,7 @@ export const DepartmentStoreSaleEncounter: IMysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Choose X Items
-        const modifiers = [];
+        const modifiers: ModifierTypeFunc[] = [];
         let i = 0;
         while (i < 5) {
           // 4/1 weight on base stat booster vs Dire Hit
@@ -134,7 +134,7 @@ export const DepartmentStoreSaleEncounter: IMysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Choose Pokeballs
-        const modifiers = [];
+        const modifiers: ModifierTypeFunc[] = [];
         let i = 0;
         while (i < 4) {
           // 10/30/20/5 weight on pokeballs

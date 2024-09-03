@@ -2,13 +2,13 @@ import { Type } from "#app/data/type";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import { Species } from "#enums/species";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MysteryEncounterOptionBuilder } from "../mystery-encounter-option";
 import { leaveEncounterWithoutBattle, setEncounterRewards, } from "../utils/encounter-phase-utils";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import Pokemon, { PlayerPokemon, PokemonMove } from "#app/field/pokemon";
-import { IntegerHolder, randSeedInt, randSeedShuffle } from "#app/utils";
+import { IntegerHolder, isNullOrUndefined, randSeedInt, randSeedShuffle } from "#app/utils";
 import PokemonSpecies, { allSpecies, getPokemonSpecies } from "#app/data/pokemon-species";
 import { HiddenAbilityRateBoosterModifier, PokemonBaseStatTotalModifier, PokemonFormChangeItemModifier, PokemonHeldItemModifier } from "#app/modifier/modifier";
 import { achvs } from "#app/system/achv";
@@ -61,17 +61,20 @@ const excludedPokemon = [
   Species.IRON_BOULDER,
   Species.IRON_CROWN,
   /** These are banned so they don't appear in the < 570 BST pool */
+  Species.COSMOG,
+  Species.MELTAN,
+  Species.KUBFU,
+  Species.COSMOEM,
+  Species.POIPOLE,
+  Species.TERAPAGOS,
+  Species.TYPE_NULL,
+  Species.CALYREX,
+  Species.NAGANADEL,
   Species.URSHIFU,
-  Species.CUBCHOO,
+  Species.OGERPON,
   Species.OKIDOGI,
   Species.MUNKIDORI,
   Species.FEZANDIPITI,
-  Species.OGERPON,
-  Species.CALYREX,
-  Species.TYPE_NULL,
-  Species.TERAPAGOS,
-  Species.COSMOG,
-  Species.COSMOEM,
 ];
 
 /**
@@ -79,7 +82,7 @@ const excludedPokemon = [
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/137 | GitHub Issue #137}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const WeirdDreamEncounter: IMysteryEncounter =
+export const WeirdDreamEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.WEIRD_DREAM)
     .withEncounterTier(MysteryEncounterTier.ROGUE)
     .withIntroSpriteConfigs([
@@ -117,8 +120,8 @@ export const WeirdDreamEncounter: IMysteryEncounter =
       return true;
     })
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
         .withHasDexProgress(true)
         .withDialogue({
           buttonLabel: `${namespace}.option.1.label`,
@@ -202,11 +205,6 @@ export const WeirdDreamEncounter: IMysteryEncounter =
         return true;
       }
     )
-    .withOutroDialogue([
-      {
-        text: `${namespace}.outro`
-      }
-    ])
     .build();
 
 interface PokemonTransformation {
@@ -364,7 +362,7 @@ async function doNewTeamPostProcess(scene: BattleScene, transformations: Pokemon
     }
     newTypes.push(newType);
     if (!newPokemon.mysteryEncounterData) {
-      newPokemon.mysteryEncounterData = new MysteryEncounterPokemonData(null, null, null, newTypes);
+      newPokemon.mysteryEncounterData = new MysteryEncounterPokemonData(undefined, undefined, undefined, newTypes);
     } else {
       newPokemon.mysteryEncounterData.types = newTypes;
     }
@@ -375,7 +373,7 @@ async function doNewTeamPostProcess(scene: BattleScene, transformations: Pokemon
     }
 
     // Any pokemon that is at or below 450 BST gets +20 permanent BST to 3 stats:  HP, lowest of Atk/SpAtk, and lowest of Def/SpDef
-    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= 600) {
+    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= 450) {
       const stats: Stat[] = [Stat.HP];
       const baseStats = newPokemon.getSpeciesForm().baseStats.slice(0);
       // Attack or SpAtk
@@ -383,9 +381,11 @@ async function doNewTeamPostProcess(scene: BattleScene, transformations: Pokemon
       // Def or SpDef
       stats.push(baseStats[Stat.DEF] < baseStats[Stat.SPDEF] ? Stat.DEF : Stat.SPDEF);
       // const mod = modifierTypes.MYSTERY_ENCOUNTER_OLD_GATEAU().newModifier(newPokemon, 20, stats);
-      const modType = modifierTypes.MYSTERY_ENCOUNTER_OLD_GATEAU().generateType(null, [20, stats]);
-      const modifier = modType.newModifier(newPokemon);
-      scene.addModifier(modifier);
+      const modType = modifierTypes.MYSTERY_ENCOUNTER_OLD_GATEAU().generateType(scene.getParty(), [20, stats]);
+      const modifier = modType?.newModifier(newPokemon);
+      if (modifier) {
+        scene.addModifier(modifier);
+      }
     }
 
     // Enable passive if previous had it
@@ -424,8 +424,8 @@ function getOriginalBst(scene: BattleScene, pokemon: Pokemon) {
 }
 
 function getTransformedSpecies(originalBst: number, bstSearchRange: [number, number], hasPokemonBstHigherThan600: boolean, hasPokemonBstBetween570And600: boolean, alreadyUsedSpecies: PokemonSpecies[]): PokemonSpecies {
-  let newSpecies: PokemonSpecies;
-  while (!newSpecies) {
+  let newSpecies: PokemonSpecies | undefined;
+  while (isNullOrUndefined(newSpecies)) {
     const bstCap = originalBst + bstSearchRange[1];
     const bstMin = Math.max(originalBst + bstSearchRange[0], 0);
 
@@ -444,7 +444,7 @@ function getTransformedSpecies(originalBst: number, bstSearchRange: [number, num
     if (validSpecies?.length > 20) {
       validSpecies = randSeedShuffle(validSpecies);
       newSpecies = validSpecies.pop();
-      while (alreadyUsedSpecies.includes(newSpecies)) {
+      while (isNullOrUndefined(newSpecies) || alreadyUsedSpecies.includes(newSpecies!)) {
         newSpecies = validSpecies.pop();
       }
     } else {
@@ -454,7 +454,7 @@ function getTransformedSpecies(originalBst: number, bstSearchRange: [number, num
     }
   }
 
-  return newSpecies;
+  return newSpecies!;
 }
 
 function doShowDreamBackground(scene: BattleScene) {
@@ -505,7 +505,7 @@ function doHideDreamBackground(scene: BattleScene) {
 
 function doSideBySideTransformations(scene: BattleScene, transformations: PokemonTransformation[]) {
   return new Promise<void>(resolve => {
-    const allTransformationPromises = [];
+    const allTransformationPromises: Promise<void>[] = [];
     for (let i = 0; i < 3; i++) {
       const delay = i * 4000;
       scene.time.delayedCall(delay, () => {

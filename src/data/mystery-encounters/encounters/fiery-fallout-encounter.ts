@@ -3,7 +3,7 @@ import { EnemyPartyConfig, generateModifierTypeOption, initBattleWithEnemyConfig
 import { AttackTypeBoosterModifierType, modifierTypes, } from "#app/modifier/modifier-type";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { TypeRequirement } from "../mystery-encounter-requirements";
 import { Species } from "#enums/species";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
@@ -36,7 +36,7 @@ const DAMAGE_PERCENTAGE: number = 20;
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/88 | GitHub Issue #88}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const FieryFalloutEncounter: IMysteryEncounter =
+export const FieryFalloutEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.FIERY_FALLOUT)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(40, 180)
@@ -75,8 +75,8 @@ export const FieryFalloutEncounter: IMysteryEncounter =
       // Load hidden Volcarona sprites
       encounter.spriteConfigs = [
         {
-          spriteKey: null,
-          fileRoot: null,
+          spriteKey: "",
+          fileRoot: "",
           species: Species.VOLCARONA,
           repeat: true,
           hidden: true,
@@ -85,8 +85,8 @@ export const FieryFalloutEncounter: IMysteryEncounter =
           startFrame: 20
         },
         {
-          spriteKey: null,
-          fileRoot: null,
+          spriteKey: "",
+          fileRoot: "",
           species: Species.VOLCARONA,
           repeat: true,
           hidden: true,
@@ -104,9 +104,9 @@ export const FieryFalloutEncounter: IMysteryEncounter =
     })
     .withOnVisualsStart((scene: BattleScene) => {
       // Play animations
-      const background = new EncounterBattleAnim(EncounterAnim.MAGMA_BG, scene.getPlayerPokemon(), scene.getPlayerPokemon());
+      const background = new EncounterBattleAnim(EncounterAnim.MAGMA_BG, scene.getPlayerPokemon()!, scene.getPlayerPokemon());
       background.playWithoutTargets(scene, 200, 70, 2, 3);
-      const animation = new EncounterBattleAnim(EncounterAnim.MAGMA_SPOUT, scene.getPlayerPokemon(), scene.getPlayerPokemon());
+      const animation = new EncounterBattleAnim(EncounterAnim.MAGMA_SPOUT, scene.getPlayerPokemon()!, scene.getPlayerPokemon());
       animation.playWithoutTargets(scene, 80, 100, 2);
       scene.time.delayedCall(600, () => {
         animation.playWithoutTargets(scene, -20, 100, 2);
@@ -133,7 +133,7 @@ export const FieryFalloutEncounter: IMysteryEncounter =
       async (scene: BattleScene) => {
         // Pick battle
         const encounter = scene.currentBattle.mysteryEncounter;
-        setEncounterRewards(scene, { fillRemaining: true }, null, () => giveLeadPokemonCharcoal(scene));
+        setEncounterRewards(scene, { fillRemaining: true }, undefined, () => giveLeadPokemonCharcoal(scene));
 
         encounter.startOfBattleEffects.push(
           {
@@ -185,7 +185,7 @@ export const FieryFalloutEncounter: IMysteryEncounter =
         }
 
         // Burn random member
-        const burnable = nonFireTypes.filter(p => isNullOrUndefined(p.status) || isNullOrUndefined(p.status.effect) || p.status?.effect === StatusEffect.BURN);
+        const burnable = nonFireTypes.filter(p => isNullOrUndefined(p.status) || isNullOrUndefined(p.status!.effect) || p.status?.effect === StatusEffect.BURN);
         if (burnable?.length > 0) {
           const roll = randSeedInt(burnable.length);
           const chosenPokemon = burnable[roll];
@@ -201,8 +201,8 @@ export const FieryFalloutEncounter: IMysteryEncounter =
       }
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
         .withPrimaryPokemonRequirement(new TypeRequirement(Type.FIRE, true, 1)) // Will set option3PrimaryName dialogue token automatically
         .withSecondaryPokemonRequirement(new TypeRequirement(Type.FIRE, true, 1)) // Will set option3SecondaryName dialogue token automatically
         .withDialogue({
@@ -224,13 +224,13 @@ export const FieryFalloutEncounter: IMysteryEncounter =
           transitionMysteryEncounterIntroVisuals(scene);
           setEncounterRewards(scene,
             { fillRemaining: true },
-            null,
+            undefined,
             () => {
               giveLeadPokemonCharcoal(scene);
             });
 
-          const primary = encounter.options[2].primaryPokemon;
-          const secondary = encounter.options[2].secondaryPokemon[0];
+          const primary = encounter.options[2].primaryPokemon!;
+          const secondary = encounter.options[2].secondaryPokemon![0];
 
           setEncounterExp(scene, [primary.id, secondary.id], getPokemonSpecies(Species.VOLCARONA).baseExp * 2);
           leaveEncounterWithoutBattle(scene);

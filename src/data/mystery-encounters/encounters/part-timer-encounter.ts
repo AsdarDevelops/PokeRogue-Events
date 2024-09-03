@@ -2,7 +2,7 @@ import { MysteryEncounterOptionBuilder } from "#app/data/mystery-encounters/myst
 import { leaveEncounterWithoutBattle, selectPokemonForOption, setEncounterExp, setEncounterRewards, transitionMysteryEncounterIntroVisuals, updatePlayerMoney } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MoveRequirement } from "../mystery-encounter-requirements";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
@@ -20,7 +20,7 @@ const namespace = "mysteryEncounter:partTimer";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/82 | GitHub Issue #82}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const PartTimerEncounter: IMysteryEncounter =
+export const PartTimerEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.PART_TIMER)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(10, 180)
@@ -70,8 +70,8 @@ export const PartTimerEncounter: IMysteryEncounter =
     .withTitle(`${namespace}.title`)
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
-    .withOption(new MysteryEncounterOptionBuilder()
-      .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+    .withOption(MysteryEncounterOptionBuilder
+      .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
       .withDialogue({
         buttonLabel: `${namespace}.option.1.label`,
         buttonTooltip: `${namespace}.option.1.tooltip`,
@@ -100,8 +100,10 @@ export const PartTimerEncounter: IMysteryEncounter =
 
           // Reduce all PP to 2 (if they started at greater than 2)
           pokemon.moveset.forEach(move => {
-            const newPpUsed = move.getMovePp() - 2;
-            move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            if (move) {
+              const newPpUsed = move.getMovePp() - 2;
+              move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            }
           });
 
           setEncounterExp(scene, pokemon.id, 100);
@@ -115,13 +117,13 @@ export const PartTimerEncounter: IMysteryEncounter =
         // Only Pokemon non-KOd pokemon can be selected
         const selectableFilter = (pokemon: Pokemon) => {
           if (!pokemon.isAllowedInBattle()) {
-            return getEncounterText(scene, `${namespace}:invalid_selection`);
+            return getEncounterText(scene, `${namespace}.invalid_selection`) ?? null;
           }
 
           return null;
         };
 
-        return selectPokemonForOption(scene, onPokemonSelected, null, selectableFilter);
+        return selectPokemonForOption(scene, onPokemonSelected, undefined, selectableFilter);
       })
       .withOptionPhase(async (scene: BattleScene) => {
         // Pick Deliveries
@@ -146,8 +148,8 @@ export const PartTimerEncounter: IMysteryEncounter =
       })
       .build()
     )
-    .withOption(new MysteryEncounterOptionBuilder()
-      .withOptionMode(MysteryEncounterOptionMode.DEFAULT)
+    .withOption(MysteryEncounterOptionBuilder
+      .newOptionWithMode(MysteryEncounterOptionMode.DEFAULT)
       .withDialogue({
         buttonLabel: `${namespace}.option.2.label`,
         buttonTooltip: `${namespace}.option.2.tooltip`,
@@ -179,8 +181,10 @@ export const PartTimerEncounter: IMysteryEncounter =
 
           // Reduce all PP to 2 (if they started at greater than 2)
           pokemon.moveset.forEach(move => {
-            const newPpUsed = move.getMovePp() - 2;
-            move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            if (move) {
+              const newPpUsed = move.getMovePp() - 2;
+              move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            }
           });
 
           setEncounterExp(scene, pokemon.id, 100);
@@ -194,13 +198,13 @@ export const PartTimerEncounter: IMysteryEncounter =
         // Only Pokemon non-KOd pokemon can be selected
         const selectableFilter = (pokemon: Pokemon) => {
           if (!pokemon.isAllowedInBattle()) {
-            return getEncounterText(scene, `${namespace}:invalid_selection`);
+            return getEncounterText(scene, `${namespace}.invalid_selection`) ?? null;
           }
 
           return null;
         };
 
-        return selectPokemonForOption(scene, onPokemonSelected, null, selectableFilter);
+        return selectPokemonForOption(scene, onPokemonSelected, undefined, selectableFilter);
       })
       .withOptionPhase(async (scene: BattleScene) => {
         // Pick Move Warehouse items
@@ -226,8 +230,8 @@ export const PartTimerEncounter: IMysteryEncounter =
       .build()
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
         .withPrimaryPokemonRequirement(new MoveRequirement(CHARMING_MOVES)) // Will set option3PrimaryName and option3PrimaryMove dialogue tokens automatically
         .withDialogue({
           buttonLabel: `${namespace}.option.3.label`,
@@ -241,13 +245,15 @@ export const PartTimerEncounter: IMysteryEncounter =
         })
         .withPreOptionPhase(async (scene: BattleScene) => {
           const encounter = scene.currentBattle.mysteryEncounter;
-          const selectedPokemon = encounter.selectedOption.primaryPokemon;
+          const selectedPokemon = encounter.selectedOption?.primaryPokemon!;
           encounter.setDialogueToken("selectedPokemon", selectedPokemon.getNameToRender());
 
           // Reduce all PP to 2 (if they started at greater than 2)
           selectedPokemon.moveset.forEach(move => {
-            const newPpUsed = move.getMovePp() - 2;
-            move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            if (move) {
+              const newPpUsed = move.getMovePp() - 2;
+              move.ppUsed = move.ppUsed < newPpUsed ? newPpUsed : move.ppUsed;
+            }
           });
 
           setEncounterExp(scene, selectedPokemon.id, 100);

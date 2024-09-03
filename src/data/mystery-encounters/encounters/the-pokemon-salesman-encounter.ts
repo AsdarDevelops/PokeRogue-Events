@@ -2,7 +2,7 @@ import { leaveEncounterWithoutBattle, transitionMysteryEncounterIntroVisuals, up
 import { isNullOrUndefined, randSeedInt } from "#app/utils";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MoneyRequirement } from "../mystery-encounter-requirements";
 import { catchPokemon, getRandomSpeciesByStarterTier, getSpriteKeysFromPokemon } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
 import { getPokemonSpecies, speciesStarters } from "#app/data/pokemon-species";
@@ -25,11 +25,11 @@ const MAX_POKEMON_PRICE_MULTIPLIER = 6;
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/36 | GitHub Issue #36}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const ThePokemonSalesmanEncounter: IMysteryEncounter =
+export const ThePokemonSalesmanEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.THE_POKEMON_SALESMAN)
     .withEncounterTier(MysteryEncounterTier.ULTRA)
     .withSceneWaveRangeRequirement(10, 180)
-    .withSceneRequirement(new MoneyRequirement(null, MAX_POKEMON_PRICE_MULTIPLIER)) // Some costs may not be as significant, this is the max you'd pay
+    .withSceneRequirement(new MoneyRequirement(undefined, MAX_POKEMON_PRICE_MULTIPLIER)) // Some costs may not be as significant, this is the max you'd pay
     .withAutoHideIntroVisuals(false)
     .withIntroSpriteConfigs([
       {
@@ -66,10 +66,10 @@ export const ThePokemonSalesmanEncounter: IMysteryEncounter =
         // If no HA mon found or you roll 1%, give shiny Magikarp
         species = getPokemonSpecies(Species.MAGIKARP);
         const hiddenIndex = species.ability2 ? 2 : 1;
-        pokemon = new PlayerPokemon(scene, species, 5, hiddenIndex, species.formIndex, null, true, null, null, null, null);
+        pokemon = new PlayerPokemon(scene, species, 5, hiddenIndex, species.formIndex, undefined, true);
       } else {
         const hiddenIndex = species.ability2 ? 2 : 1;
-        pokemon = new PlayerPokemon(scene, species, 5, hiddenIndex, species.formIndex, null, null, null, null, null, null);
+        pokemon = new PlayerPokemon(scene, species, 5, hiddenIndex, species.formIndex);
       }
 
       const { spriteKey, fileRoot } = getSpriteKeysFromPokemon(pokemon);
@@ -88,8 +88,8 @@ export const ThePokemonSalesmanEncounter: IMysteryEncounter =
         // Always max price for shiny (flip HA back to normal), and add special messaging
         priceMultiplier = MAX_POKEMON_PRICE_MULTIPLIER;
         pokemon.abilityIndex = 0;
-        encounter.dialogue.encounterOptionsDialogue.description = `${namespace}.description_shiny`;
-        encounter.options[0].dialogue.buttonTooltip = `${namespace}.option.1.tooltip_shiny`;
+        encounter.dialogue.encounterOptionsDialogue!.description = `${namespace}.description_shiny`;
+        encounter.options[0].dialogue!.buttonTooltip = `${namespace}.option.1.tooltip_shiny`;
       }
       const price = scene.getWaveMoneyAmount(priceMultiplier);
       encounter.setDialogueToken("purchasePokemon", pokemon.getNameToRender());
@@ -104,10 +104,10 @@ export const ThePokemonSalesmanEncounter: IMysteryEncounter =
       return true;
     })
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DISABLED_OR_DEFAULT)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DISABLED_OR_DEFAULT)
         .withHasDexProgress(true)
-        .withSceneMoneyRequirement(null, MAX_POKEMON_PRICE_MULTIPLIER) // Wave scaling money multiplier of 2
+        .withSceneMoneyRequirement(undefined, MAX_POKEMON_PRICE_MULTIPLIER) // Wave scaling money multiplier of 2
         .withDialogue({
           buttonLabel: `${namespace}.option.1.label`,
           buttonTooltip: `${namespace}.option.1.tooltip`,

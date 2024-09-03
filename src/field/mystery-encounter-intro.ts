@@ -1,9 +1,10 @@
 import { GameObjects } from "phaser";
 import BattleScene from "../battle-scene";
-import IMysteryEncounter from "../data/mystery-encounters/mystery-encounter";
+import MysteryEncounter from "../data/mystery-encounters/mystery-encounter";
 import { Species } from "#enums/species";
 import { isNullOrUndefined } from "#app/utils";
 import { getSpriteKeysFromSpecies } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
+import PlayAnimationConfig = Phaser.Types.Animations.PlayAnimationConfig;
 
 type KnownFileRoot =
   | "arenas"
@@ -70,11 +71,11 @@ export class MysteryEncounterSpriteConfig {
  * Note: intro visuals are not "Trainers" or any other specific game object, though they may contain trainer sprites
  */
 export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Container {
-  public encounter: IMysteryEncounter;
+  public encounter: MysteryEncounter;
   public spriteConfigs: MysteryEncounterSpriteConfig[];
   public enterFromRight: boolean;
 
-  constructor(scene: BattleScene, encounter: IMysteryEncounter) {
+  constructor(scene: BattleScene, encounter: MysteryEncounter) {
     super(scene, -72, 76);
     this.encounter = encounter;
     this.enterFromRight = encounter.enterIntroVisualsFromRight ?? false;
@@ -85,7 +86,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
       };
 
       if (!isNullOrUndefined(result.species)) {
-        const keys = getSpriteKeysFromSpecies(result.species);
+        const keys = getSpriteKeysFromSpecies(result.species!);
         result.spriteKey = keys.spriteKey;
         result.fileRoot = keys.fileRoot;
         result.isPokemon = true;
@@ -164,7 +165,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
         }
       }
 
-      if (!isNaN(alpha)) {
+      if (!isNullOrUndefined(alpha)) {
         sprite.setAlpha(alpha);
         tintSprite.setAlpha(alpha);
       }
@@ -290,7 +291,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
     const tintSprites = this.getTintSprites();
     this.spriteConfigs.forEach((config, i) => {
       if (!config.disableAnimation) {
-        const trainerAnimConfig = {
+        const trainerAnimConfig: PlayAnimationConfig = {
           key: config.spriteKey,
           repeat: config?.repeat ? -1 : 0,
           startFrame: config?.startFrame ?? 0
@@ -307,7 +308,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
    */
   getSpriteAtIndex(index: number): Phaser.GameObjects.Sprite[] {
     if (!this.spriteConfigs) {
-      return;
+      return [];
     }
 
     const ret: Phaser.GameObjects.Sprite[] = [];
@@ -319,7 +320,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
 
   getSprites(): Phaser.GameObjects.Sprite[] {
     if (!this.spriteConfigs) {
-      return;
+      return [];
     }
 
     const ret: Phaser.GameObjects.Sprite[] = [];
@@ -331,7 +332,7 @@ export default class MysteryEncounterIntroVisuals extends Phaser.GameObjects.Con
 
   getTintSprites(): Phaser.GameObjects.Sprite[] {
     if (!this.spriteConfigs) {
-      return;
+      return [];
     }
 
     const ret: Phaser.GameObjects.Sprite[] = [];

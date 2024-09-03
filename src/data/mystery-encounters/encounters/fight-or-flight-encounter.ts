@@ -17,7 +17,7 @@ import {
 } from "#app/modifier/modifier-type";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
-import IMysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
+import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MoveRequirement } from "../mystery-encounter-requirements";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
@@ -33,7 +33,7 @@ const namespace = "mysteryEncounter:fightOrFlight";
  * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/24 | GitHub Issue #24}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
-export const FightOrFlightEncounter: IMysteryEncounter =
+export const FightOrFlightEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.FIGHT_OR_FLIGHT)
     .withEncounterTier(MysteryEncounterTier.COMMON)
     .withSceneWaveRangeRequirement(10, 180) // waves 10 to 180
@@ -50,7 +50,7 @@ export const FightOrFlightEncounter: IMysteryEncounter =
 
       // Calculate boss mon
       const bossSpecies = scene.arena.randomSpecies(scene.currentBattle.waveIndex, scene.currentBattle.waveIndex, 0, getPartyLuckValue(scene.getParty()), true);
-      const bossPokemon = new EnemyPokemon(scene, bossSpecies, scene.currentBattle.waveIndex, TrainerSlot.NONE, true, null);
+      const bossPokemon = new EnemyPokemon(scene, bossSpecies, scene.currentBattle.waveIndex, TrainerSlot.NONE, true);
       const config: EnemyPartyConfig = {
         levelAdditiveMultiplier: 1,
         pokemonConfigs: [{
@@ -72,7 +72,7 @@ export const FightOrFlightEncounter: IMysteryEncounter =
               ? ModifierTier.ULTRA
               : ModifierTier.GREAT;
       regenerateModifierPoolThresholds(scene.getParty(), ModifierPoolType.PLAYER, 0);
-      let item: ModifierTypeOption;
+      let item: ModifierTypeOption | null = null;
       // TMs excluded from possible rewards as they're too swingy in value for a singular item reward
       while (!item || item.type.id.includes("TM_")) {
         item = getPlayerModifierTypeOptions(1, scene.getParty(), [], { guaranteedModifierTiers: [tier], allowLuckUpgrades: false })[0];
@@ -127,8 +127,8 @@ export const FightOrFlightEncounter: IMysteryEncounter =
       }
     )
     .withOption(
-      new MysteryEncounterOptionBuilder()
-        .withOptionMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
+      MysteryEncounterOptionBuilder
+        .newOptionWithMode(MysteryEncounterOptionMode.DISABLED_OR_SPECIAL)
         .withPrimaryPokemonRequirement(new MoveRequirement(STEALING_MOVES)) // Will set option2PrimaryName and option2PrimaryMove dialogue tokens automatically
         .withDialogue({
           buttonLabel: `${namespace}.option.2.label`,
@@ -147,8 +147,8 @@ export const FightOrFlightEncounter: IMysteryEncounter =
           setEncounterRewards(scene, { guaranteedModifierTypeOptions: [item], fillRemaining: false });
 
           // Use primaryPokemon to execute the thievery
-          const primaryPokemon = encounter.options[1].primaryPokemon;
-          setEncounterExp(scene, primaryPokemon.id, encounter.enemyPartyConfigs[0].pokemonConfigs[0].species.baseExp);
+          const primaryPokemon = encounter.options[1].primaryPokemon!;
+          setEncounterExp(scene, primaryPokemon.id, encounter.enemyPartyConfigs[0].pokemonConfigs![0].species.baseExp);
           leaveEncounterWithoutBattle(scene);
         })
         .build()
