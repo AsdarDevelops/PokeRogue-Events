@@ -1,5 +1,5 @@
 import { MysteryEncounterOptionBuilder } from "#app/data/mystery-encounters/mystery-encounter-option";
-import { EnemyPartyConfig, generateModifierTypeOption, initBattleWithEnemyConfig, loadCustomMovesForEncounter, leaveEncounterWithoutBattle, setEncounterExp, setEncounterRewards, transitionMysteryEncounterIntroVisuals } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
+import { EnemyPartyConfig, initBattleWithEnemyConfig, loadCustomMovesForEncounter, leaveEncounterWithoutBattle, setEncounterExp, setEncounterRewards, transitionMysteryEncounterIntroVisuals, generateModifierType } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
 import { AttackTypeBoosterModifierType, modifierTypes, } from "#app/modifier/modifier-type";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
@@ -33,7 +33,7 @@ const DAMAGE_PERCENTAGE: number = 20;
 
 /**
  * Fiery Fallout encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/88 | GitHub Issue #88}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3814 | GitHub Issue #3814}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const FieryFalloutEncounter: MysteryEncounter =
@@ -50,7 +50,7 @@ export const FieryFalloutEncounter: MysteryEncounter =
       },
     ])
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       // Calculate boss mons
       const volcaronaSpecies = getPokemonSpecies(Species.VOLCARONA);
@@ -132,7 +132,7 @@ export const FieryFalloutEncounter: MysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Pick battle
-        const encounter = scene.currentBattle.mysteryEncounter;
+        const encounter = scene.currentBattle.mysteryEncounter!;
         setEncounterRewards(scene, { fillRemaining: true }, undefined, () => giveLeadPokemonCharcoal(scene));
 
         encounter.startOfBattleEffects.push(
@@ -160,7 +160,7 @@ export const FieryFalloutEncounter: MysteryEncounter =
             move: new PokemonMove(Moves.QUIVER_DANCE),
             ignorePp: true
           });
-        await initBattleWithEnemyConfig(scene, scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0]);
+        await initBattleWithEnemyConfig(scene, scene.currentBattle.mysteryEncounter!.enemyPartyConfigs[0]);
       }
     )
     .withSimpleOption(
@@ -175,7 +175,7 @@ export const FieryFalloutEncounter: MysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Damage non-fire types and burn 1 random non-fire type member
-        const encounter = scene.currentBattle.mysteryEncounter;
+        const encounter = scene.currentBattle.mysteryEncounter!;
         const nonFireTypes = scene.getParty().filter((p) => p.isAllowedInBattle() && !p.getTypes().includes(Type.FIRE));
 
         for (const pkm of nonFireTypes) {
@@ -220,7 +220,7 @@ export const FieryFalloutEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Fire types help calm the Volcarona
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           transitionMysteryEncounterIntroVisuals(scene);
           setEncounterRewards(scene,
             { fillRemaining: true },
@@ -243,9 +243,9 @@ function giveLeadPokemonCharcoal(scene: BattleScene) {
   // Give first party pokemon Charcoal for free at end of battle
   const leadPokemon = scene.getParty()?.[0];
   if (leadPokemon) {
-    const charcoal = generateModifierTypeOption(scene, modifierTypes.ATTACK_TYPE_BOOSTER, [Type.FIRE]).type as AttackTypeBoosterModifierType;
+    const charcoal = generateModifierType(scene, modifierTypes.ATTACK_TYPE_BOOSTER, [Type.FIRE]) as AttackTypeBoosterModifierType;
     applyModifierTypeToPlayerPokemon(scene, leadPokemon, charcoal);
-    scene.currentBattle.mysteryEncounter.setDialogueToken("leadPokemon", leadPokemon.getNameToRender());
+    scene.currentBattle.mysteryEncounter!.setDialogueToken("leadPokemon", leadPokemon.getNameToRender());
     queueEncounterMessage(scene, `${namespace}.found_charcoal`);
   }
 }

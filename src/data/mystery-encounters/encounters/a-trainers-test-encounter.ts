@@ -9,17 +9,19 @@ import { Species } from "#enums/species";
 import { getSpriteKeysFromSpecies } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
 import { randSeedInt } from "#app/utils";
 import i18next from "i18next";
-import { PartyHealPhase } from "#app/phases";
 import { IEggOptions } from "#app/data/egg";
 import { EggSourceType } from "#enums/egg-source-types";
 import { EggTier } from "#enums/egg-type";
+import { PartyHealPhase } from "#app/phases/party-heal-phase";
+import { ModifierTier } from "#app/modifier/modifier-tier";
+import { modifierTypes } from "#app/modifier/modifier-type";
 
 /** the i18n namespace for the encounter */
 const namespace = "mysteryEncounter:aTrainersTest";
 
 /**
  * A Trainer's Test encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/115 | GitHub Issue #115}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3816 | GitHub Issue #3816}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const ATrainersTestEncounter: MysteryEncounter =
@@ -34,7 +36,7 @@ export const ATrainersTestEncounter: MysteryEncounter =
     ])
     .withAutoHideIntroVisuals(false)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       // Randomly pick from 1 of the 5 stat trainers to spawn
       let trainerType: TrainerType;
@@ -135,8 +137,8 @@ export const ATrainersTestEncounter: MysteryEncounter =
         buttonTooltip: `${namespace}.option.1.tooltip`
       },
       async (scene: BattleScene) => {
-        const encounter = scene.currentBattle.mysteryEncounter;
-        // Spawn standard trainer battle with memory mushroom reward
+        const encounter = scene.currentBattle.mysteryEncounter!;
+        // Battle the stat trainer for an Egg and great rewards
         const config: EnemyPartyConfig = encounter.enemyPartyConfigs[0];
 
         await transitionMysteryEncounterIntroVisuals(scene);
@@ -149,7 +151,7 @@ export const ATrainersTestEncounter: MysteryEncounter =
           tier: EggTier.ULTRA
         };
         encounter.setDialogueToken("eggType", i18next.t(`${namespace}.eggTypes.epic`));
-        setEncounterRewards(scene, { fillRemaining: true }, [eggOptions]);
+        setEncounterRewards(scene, { guaranteedModifierTypeFuncs: [modifierTypes.SACRED_ASH], guaranteedModifierTiers: [ModifierTier.ROGUE, ModifierTier.ULTRA], fillRemaining: true }, [eggOptions]);
 
         return initBattleWithEnemyConfig(scene, config);
       }
@@ -160,7 +162,7 @@ export const ATrainersTestEncounter: MysteryEncounter =
         buttonTooltip: `${namespace}.option.2.tooltip`
       },
       async (scene: BattleScene) => {
-        const encounter = scene.currentBattle.mysteryEncounter;
+        const encounter = scene.currentBattle.mysteryEncounter!;
         // Full heal party
         scene.unshiftPhase(new PartyHealPhase(scene, true));
 

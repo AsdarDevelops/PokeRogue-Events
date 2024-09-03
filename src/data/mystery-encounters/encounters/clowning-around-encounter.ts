@@ -53,7 +53,7 @@ const RANDOM_ABILITY_POOL = [
 
 /**
  * Clowning Around encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/69 | GitHub Issue #69}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3807 | GitHub Issue #3807}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const ClowningAroundEncounter: MysteryEncounter =
@@ -102,7 +102,7 @@ export const ClowningAroundEncounter: MysteryEncounter =
       },
     ])
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       const clownTrainerType = TrainerType.HARLEQUIN;
       const clownConfig = trainerConfigs[clownTrainerType].copy();
@@ -159,7 +159,7 @@ export const ClowningAroundEncounter: MysteryEncounter =
           ],
         })
         .withOptionPhase(async (scene: BattleScene) => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           // Spawn battle
           const config: EnemyPartyConfig = encounter.enemyPartyConfigs[0];
 
@@ -236,7 +236,7 @@ export const ClowningAroundEncounter: MysteryEncounter =
           // Swap player's items on pokemon with the most items
           // Item comparisons look at whichever Pokemon has the greatest number of TRANSFERABLE, non-berry items
           // So Vitamins, form change items, etc. are not included
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
 
           const party = scene.getParty();
           let mostHeldItemsPokemon = party[0];
@@ -334,13 +334,13 @@ export const ClowningAroundEncounter: MysteryEncounter =
               randSeedShuffle(priorityTypes);
             }
 
-            let newTypes;
+            let newTypes: Type[];
             if (!originalTypes || originalTypes.length < 1) {
-              newTypes = priorityTypes?.length > 0 ? [priorityTypes.pop()] : [(randSeedInt(18) as Type)];
+              newTypes = priorityTypes && priorityTypes.length > 0 ? [priorityTypes.pop()!] : [(randSeedInt(18) as Type)];
             } else {
               newTypes = originalTypes.map(m => {
-                if (priorityTypes?.length > 0) {
-                  const ret = priorityTypes.pop();
+                if (priorityTypes && priorityTypes.length > 0) {
+                  const ret = priorityTypes.pop()!;
                   randSeedShuffle(priorityTypes);
                   return ret;
                 }
@@ -418,8 +418,8 @@ function onYesAbilitySwap(scene: BattleScene, resolve) {
     if (!pokemon.mysteryEncounterData) {
       pokemon.mysteryEncounterData = new MysteryEncounterPokemonData(undefined, Abilities.AERILATE);
     }
-    pokemon.mysteryEncounterData.ability = scene.currentBattle.mysteryEncounter.misc.ability;
-    scene.currentBattle.mysteryEncounter.setDialogueToken("chosenPokemon", pokemon.getNameToRender());
+    pokemon.mysteryEncounterData.ability = scene.currentBattle.mysteryEncounter!.misc.ability;
+    scene.currentBattle.mysteryEncounter!.setDialogueToken("chosenPokemon", pokemon.getNameToRender());
     scene.ui.setMode(Mode.MESSAGE).then(() => resolve(true));
   };
 

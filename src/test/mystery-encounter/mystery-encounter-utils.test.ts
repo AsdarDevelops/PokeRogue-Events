@@ -6,11 +6,11 @@ import { Species } from "#enums/species";
 import BattleScene from "#app/battle-scene";
 import { StatusEffect } from "#app/data/status-effect";
 import MysteryEncounter from "#app/data/mystery-encounters/mystery-encounter";
-import { MessagePhase } from "#app/phases";
 import { getPokemonSpecies, speciesStarters } from "#app/data/pokemon-species";
 import { Type } from "#app/data/type";
 import { getHighestLevelPlayerPokemon, getLowestLevelPlayerPokemon, getRandomPlayerPokemon, getRandomSpeciesByStarterTier, koPlayerPokemon } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
 import { getEncounterText, queueEncounterMessage, showEncounterDialogue, showEncounterText } from "#app/data/mystery-encounters/utils/encounter-dialogue-utils";
+import { MessagePhase } from "#app/phases/message-phase";
 
 describe("Mystery Encounter Utils", () => {
   let phaserGame: Phaser.Game;
@@ -286,7 +286,7 @@ describe("Mystery Encounter Utils", () => {
       scene.currentBattle.mysteryEncounter.setDialogueToken("test", "value");
       const spy = vi.spyOn(game.scene.ui, "showText");
 
-      showEncounterText(scene, "mysteryEncounter:unit_test_dialogue");
+      await showEncounterText(scene, "mysteryEncounter:unit_test_dialogue");
       expect(spy).toHaveBeenCalledWith("valuevalue {{testvalue}} {{test1}} {{test}} {{test\\}} {{test\\}} {test}}", null, expect.any(Function), 0, true);
     });
   });
@@ -297,7 +297,7 @@ describe("Mystery Encounter Utils", () => {
       scene.currentBattle.mysteryEncounter.setDialogueToken("test", "value");
       const spy = vi.spyOn(game.scene.ui, "showDialogue");
 
-      showEncounterDialogue(scene, "mysteryEncounter:unit_test_dialogue", "mysteryEncounter:unit_test_dialogue");
+      await showEncounterDialogue(scene, "mysteryEncounter:unit_test_dialogue", "mysteryEncounter:unit_test_dialogue");
       expect(spy).toHaveBeenCalledWith("valuevalue {{testvalue}} {{test1}} {{test}} {{test\\}} {{test\\}} {test}}", "valuevalue {{testvalue}} {{test1}} {{test}} {{test\\}} {{test\\}} {test}}", null, expect.any(Function), 0);
     });
   });

@@ -1,8 +1,8 @@
-import { Biome } from "#app/enums/biome.js";
-import { Species } from "#app/enums/species.js";
+import { Biome } from "#app/enums/biome";
+import { Species } from "#app/enums/species";
+import { GameModes } from "#app/game-mode";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import GameManager from "./utils/gameManager";
-import { GameModes } from "#app/game-mode";
 
 const FinalWave = {
   Classic: 200,
@@ -53,7 +53,7 @@ describe("Final Boss", () => {
     expect(game.scene.getEnemyPokemon()!.species.speciesId).not.toBe(Species.ETERNATUS);
   });
 
-  it("should not have passive enabled on Eternatus", async () => {
+  it("should NOT have passive enabled on Eternatus", async () => {
     await game.runToFinalBossEncounter(game, [Species.BIDOOF], GameModes.CLASSIC);
 
     const eternatus = game.scene.getEnemyPokemon();

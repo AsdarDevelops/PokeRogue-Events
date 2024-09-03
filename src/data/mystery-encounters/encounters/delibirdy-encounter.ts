@@ -11,10 +11,10 @@ import { getEncounterText, showEncounterText } from "#app/data/mystery-encounter
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { HealingBoosterModifier, HiddenAbilityRateBoosterModifier, LevelIncrementBoosterModifier, PokemonHeldItemModifier, PreserveBerryModifier } from "#app/modifier/modifier";
-import { ModifierRewardPhase } from "#app/phases";
 import { OptionSelectItem } from "#app/ui/abstact-option-select-ui-handler";
 import { applyModifierTypeToPlayerPokemon } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
 import i18next from "#app/plugins/i18n";
+import { ModifierRewardPhase } from "#app/phases/modifier-reward-phase";
 
 /** the i18n namespace for this encounter */
 const namespace = "mysteryEncounter:delibirdy";
@@ -33,7 +33,7 @@ const OPTION_3_DISALLOWED_MODIFIERS = [
 
 /**
  * Delibird-y encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/57 | GitHub Issue #57}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3804 | GitHub Issue #3804}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const DelibirdyEncounter: MysteryEncounter =
@@ -102,7 +102,7 @@ export const DelibirdyEncounter: MysteryEncounter =
           ],
         })
         .withPreOptionPhase(async (scene: BattleScene): Promise<boolean> => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           updatePlayerMoney(scene, -(encounter.options[0].requirements[0] as MoneyRequirement).requiredMoney, true, false);
           return true;
         })
@@ -140,7 +140,7 @@ export const DelibirdyEncounter: MysteryEncounter =
           ],
         })
         .withPreOptionPhase(async (scene: BattleScene): Promise<boolean> => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const onPokemonSelected = (pokemon: PlayerPokemon) => {
             // Get Pokemon held items and filter for valid ones
             const validItems = pokemon.getHeldItems().filter((it) => {
@@ -178,7 +178,7 @@ export const DelibirdyEncounter: MysteryEncounter =
           return selectPokemonForOption(scene, onPokemonSelected, undefined, selectableFilter);
         })
         .withOptionPhase(async (scene: BattleScene) => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const modifier = encounter.misc.chosenModifier;
 
           // Give the player a Candy Jar if they gave a Berry, and a Healing Charm for Reviver Seed
@@ -235,7 +235,7 @@ export const DelibirdyEncounter: MysteryEncounter =
           ],
         })
         .withPreOptionPhase(async (scene: BattleScene): Promise<boolean> => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const onPokemonSelected = (pokemon: PlayerPokemon) => {
             // Get Pokemon held items and filter for valid ones
             const validItems = pokemon.getHeldItems().filter((it) => {
@@ -273,7 +273,7 @@ export const DelibirdyEncounter: MysteryEncounter =
           return selectPokemonForOption(scene, onPokemonSelected, undefined, selectableFilter);
         })
         .withOptionPhase(async (scene: BattleScene) => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const modifier = encounter.misc.chosenModifier;
 
           // Check if the player has max stacks of Berry Pouch already

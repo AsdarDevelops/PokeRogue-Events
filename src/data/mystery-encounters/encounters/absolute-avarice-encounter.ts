@@ -11,7 +11,6 @@ import { queueEncounterMessage } from "#app/data/mystery-encounters/utils/encoun
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { BerryModifier } from "#app/modifier/modifier";
-import { StatChangePhase } from "#app/phases";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
 import { Moves } from "#enums/moves";
 import { BattlerTagType } from "#enums/battler-tag-type";
@@ -23,13 +22,14 @@ import { TrainerSlot } from "#app/data/trainer-config";
 import { PokeballType } from "#app/data/pokeball";
 import HeldModifierConfig from "#app/interfaces/held-modifier-config";
 import { BerryType } from "#enums/berry-type";
+import { StatChangePhase } from "#app/phases/stat-change-phase";
 
 /** the i18n namespace for this encounter */
 const namespace = "mysteryEncounter:absoluteAvarice";
 
 /**
  * Absolute Avarice encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/58 | GitHub Issue #58}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3805 | GitHub Issue #3805}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const AbsoluteAvariceEncounter: MysteryEncounter =
@@ -173,9 +173,9 @@ export const AbsoluteAvariceEncounter: MysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
-      scene.loadSe("PRSFX- Bug Bite", "battle_anims");
+      scene.loadSe("PRSFX- Bug Bite", "battle_anims", "PRSFX- Bug Bite.wav");
       scene.loadSe("Follow Me", "battle_anims", "Follow Me.mp3");
 
       // Get all player berry items, remove from party, and store reference
@@ -199,7 +199,7 @@ export const AbsoluteAvariceEncounter: MysteryEncounter =
         // Overflow berries will be "lost" on the boss, but it's un-catchable anyway
         for (let i = 0; i < berryMod.stackCount; i++) {
           const modifierType = generateModifierType(scene, modifierTypes.BERRY, [berryMod.berryType]) as PokemonHeldItemModifierType;
-          bossModifierConfigs.push({ modifierType });
+          bossModifierConfigs.push({ modifier: modifierType });
         }
 
         scene.removeModifier(berryMod);
@@ -242,15 +242,17 @@ export const AbsoluteAvariceEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Pick battle
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
 
           // Provides 1x Reviver Seed to each party member at end of battle
           const revSeed = generateModifierType(scene, modifierTypes.REVIVER_SEED);
           const givePartyPokemonReviverSeeds = () => {
             const party = scene.getParty();
             party.forEach(p => {
-              const seedModifier = revSeed.newModifier(p);
-              scene.addModifier(seedModifier, false, false, false, true);
+              if (revSeed) {
+                const seedModifier = revSeed.newModifier(p);
+                scene.addModifier(seedModifier, false, false, false, true);
+              }
             });
             queueEncounterMessage(scene, `${namespace}.option.1.food_stash`);
           };
@@ -281,7 +283,7 @@ export const AbsoluteAvariceEncounter: MysteryEncounter =
           ],
         })
         .withOptionPhase(async (scene: BattleScene) => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const berryMap = encounter.misc.berryItemsMap;
 
           // Returns 2/5 of the berries stolen from each Pokemon
@@ -347,9 +349,9 @@ function doGreedentSpriteSteal(scene: BattleScene) {
   const shakeDelay = 50;
   const slideDelay = 500;
 
-  const greedentSprites = scene.currentBattle.mysteryEncounter.introVisuals?.getSpriteAtIndex(1);
+  const greedentSprites = scene.currentBattle.mysteryEncounter!.introVisuals?.getSpriteAtIndex(1);
 
-  scene.playSound("Follow Me");
+  scene.playSound("battle_anims/Follow Me");
   scene.tweens.chain({
     targets: greedentSprites,
     tweens: [
@@ -421,7 +423,7 @@ function doGreedentSpriteSteal(scene: BattleScene) {
 }
 
 function doGreedentEatBerries(scene: BattleScene) {
-  const greedentSprites = scene.currentBattle.mysteryEncounter.introVisuals?.getSpriteAtIndex(1);
+  const greedentSprites = scene.currentBattle.mysteryEncounter!.introVisuals?.getSpriteAtIndex(1);
   let index = 1;
   scene.tweens.add({
     targets: greedentSprites,
@@ -431,11 +433,11 @@ function doGreedentEatBerries(scene: BattleScene) {
     y: "-=8",
     loop: 5,
     onStart: () => {
-      scene.playSound("PRSFX- Bug Bite");
+      scene.playSound("battle_anims/PRSFX- Bug Bite");
     },
     onLoop: () => {
       if (index % 2 === 0) {
-        scene.playSound("PRSFX- Bug Bite");
+        scene.playSound("battle_anims/PRSFX- Bug Bite");
       }
       index++;
     }
@@ -453,7 +455,7 @@ function doBerrySpritePile(scene: BattleScene, isEat: boolean = false) {
   if (isEat) {
     animationOrder = animationOrder.reverse();
   }
-  const encounter = scene.currentBattle.mysteryEncounter;
+  const encounter = scene.currentBattle.mysteryEncounter!;
   animationOrder.forEach((berry, i) => {
     const introVisualsIndex = encounter.spriteConfigs.findIndex(config => config.spriteKey?.includes(berry));
     let sprite: Phaser.GameObjects.Sprite, tintSprite: Phaser.GameObjects.Sprite;

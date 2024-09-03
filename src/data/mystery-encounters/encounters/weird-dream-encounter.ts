@@ -24,8 +24,8 @@ import { getLevelTotalExp } from "#app/data/exp";
 /** i18n namespace for encounter */
 const namespace = "mysteryEncounter:weirdDream";
 
-/** Exclude Ultra Beasts (inludes Cosmog/Solgaleo/Lunala/Necrozma), Paradox (includes Miraidon/Koraidon), Eternatus, Urshifu, the Poison Chain trio, Ogerpon */
-const excludedPokemon = [
+/** Exclude Ultra Beasts, Paradox, Eternatus, and all legendary/mythical/trio pokemon that are below 570 BST */
+const EXCLUDED_TRANSFORMATION_SPECIES = [
   Species.ETERNATUS,
   /** UBs */
   Species.NIHILEGO,
@@ -77,14 +77,24 @@ const excludedPokemon = [
   Species.FEZANDIPITI,
 ];
 
+const SUPER_LEGENDARY_BST_THRESHOLD = 600;
+const NON_LEGENDARY_BST_THRESHOLD = 570;
+const GAIN_OLD_GATEAU_ITEM_BST_THRESHOLD = 450;
+
+/** Value ranges of the resulting species BST transformations after adding values to original species */
+
+const HIGH_BST_TRANSFORM_BASE_VALUES = [90, 110];
+const STANDARD_BST_TRANSFORM_BASE_VALUES = [40, 50];
+
 /**
  * Weird Dream encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/137 | GitHub Issue #137}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3822 | GitHub Issue #3822}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const WeirdDreamEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.WEIRD_DREAM)
     .withEncounterTier(MysteryEncounterTier.ROGUE)
+    .withSceneWaveRangeRequirement(10, 180)
     .withIntroSpriteConfigs([
       {
         spriteKey: "girawitch",
@@ -102,7 +112,6 @@ export const WeirdDreamEncounter: MysteryEncounter =
         text: `${namespace}.intro_dialogue`,
       },
     ])
-    .withSceneWaveRangeRequirement(10, 180)
     .withTitle(`${namespace}.title`)
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
@@ -141,7 +150,7 @@ export const WeirdDreamEncounter: MysteryEncounter =
           // Calculate all the newly transformed Pokemon and begin asset load
           const teamTransformations = getTeamTransformations(scene);
           const loadAssets = teamTransformations.map(t => (t.newPokemon as PlayerPokemon).loadAssets());
-          scene.currentBattle.mysteryEncounter.misc = {
+          scene.currentBattle.mysteryEncounter!.misc = {
             teamTransformations,
             loadAssets
           };
@@ -152,8 +161,8 @@ export const WeirdDreamEncounter: MysteryEncounter =
 
           // Change the entire player's party
           // Wait for all new Pokemon assets to be loaded before showing transformation animations
-          await Promise.all(scene.currentBattle.mysteryEncounter.misc.loadAssets);
-          const transformations = scene.currentBattle.mysteryEncounter.misc.teamTransformations;
+          await Promise.all(scene.currentBattle.mysteryEncounter!.misc.loadAssets);
+          const transformations = scene.currentBattle.mysteryEncounter!.misc.teamTransformations;
 
           // If there are 1-3 transformations, do them centered back to back
           // Otherwise, the first 3 transformations are executed side-by-side, then any remaining 1-3 transformations occur in those same respective positions
@@ -225,9 +234,9 @@ function getTeamTransformations(scene: BattleScene): PokemonTransformation[] {
   });
 
   // Only 1 Pokemon can be transformed into BST higher than 600
-  let hasPokemonBstHigherThan600 = false;
+  let hasPokemonInSuperLegendaryBstThreshold = false;
   // Only 1 other Pokemon can be transformed into BST between 570-600
-  let hasPokemonBstBetween570And600 = false;
+  let hasPokemonInLegendaryBstThreshold = false;
 
   // First, roll 2 of the party members to new Pokemon at a +90 to +110 BST difference
   // Then, roll the remainder of the party members at a +40 to +50 BST difference
@@ -241,19 +250,19 @@ function getTeamTransformations(scene: BattleScene): PokemonTransformation[] {
     const bst = getOriginalBst(scene, removed);
     let newBstRange;
     if (i < 2) {
-      newBstRange = [90, 110];
+      newBstRange = HIGH_BST_TRANSFORM_BASE_VALUES;
     } else {
-      newBstRange = [40, 50];
+      newBstRange = STANDARD_BST_TRANSFORM_BASE_VALUES;
     }
 
-    const newSpecies = getTransformedSpecies(bst, newBstRange, hasPokemonBstHigherThan600, hasPokemonBstBetween570And600, alreadyUsedSpecies);
+    const newSpecies = getTransformedSpecies(bst, newBstRange, hasPokemonInSuperLegendaryBstThreshold, hasPokemonInLegendaryBstThreshold, alreadyUsedSpecies);
 
     const newSpeciesBst = newSpecies.getBaseStatTotal();
-    if (newSpeciesBst > 600) {
-      hasPokemonBstHigherThan600 = true;
+    if (newSpeciesBst > SUPER_LEGENDARY_BST_THRESHOLD) {
+      hasPokemonInSuperLegendaryBstThreshold = true;
     }
-    if (newSpeciesBst <= 600 && newSpeciesBst >= 570) {
-      hasPokemonBstBetween570And600 = true;
+    if (newSpeciesBst <= SUPER_LEGENDARY_BST_THRESHOLD && newSpeciesBst >= NON_LEGENDARY_BST_THRESHOLD) {
+      hasPokemonInLegendaryBstThreshold = true;
     }
 
 
@@ -299,9 +308,8 @@ async function doNewTeamPostProcess(scene: BattleScene, transformations: Pokemon
       return newValue > iv ? newValue : iv;
     });
 
-
     // For pokemon at/below 570 BST or any shiny pokemon, unlock it permanently as if you had caught it
-    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= 570 || newPokemon.isShiny()) {
+    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= NON_LEGENDARY_BST_THRESHOLD || newPokemon.isShiny()) {
       if (newPokemon.getSpeciesForm().abilityHidden && newPokemon.abilityIndex === newPokemon.getSpeciesForm().getAbilityCount() - 1) {
         scene.validateAchv(achvs.HIDDEN_ABILITY);
       }
@@ -372,8 +380,8 @@ async function doNewTeamPostProcess(scene: BattleScene, transformations: Pokemon
       scene.addModifier(item, false, false, false, true);
     }
 
-    // Any pokemon that is at or below 450 BST gets +20 permanent BST to 3 stats:  HP, lowest of Atk/SpAtk, and lowest of Def/SpDef
-    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= 450) {
+    // Any pokemon that is at or below 450 BST gets +20 permanent BST to 3 stats:  HP (halved, +10), lowest of Atk/SpAtk, and lowest of Def/SpDef
+    if (newPokemon.getSpeciesForm().getBaseStatTotal() <= GAIN_OLD_GATEAU_ITEM_BST_THRESHOLD) {
       const stats: Stat[] = [Stat.HP];
       const baseStats = newPokemon.getSpeciesForm().baseStats.slice(0);
       // Attack or SpAtk
@@ -435,9 +443,9 @@ function getTransformedSpecies(originalBst: number, bstSearchRange: [number, num
         const speciesBst = s.getBaseStatTotal();
         const bstInRange = speciesBst >= bstMin && speciesBst <= bstCap;
         // Checks that a Pokemon has not already been added in the +600 or 570-600 slots;
-        const validBst = (!hasPokemonBstBetween570And600 || (speciesBst < 570 || speciesBst > 600)) &&
-          (!hasPokemonBstHigherThan600 || speciesBst <= 600);
-        return bstInRange && validBst && !excludedPokemon.includes(s.speciesId);
+        const validBst = (!hasPokemonBstBetween570And600 || (speciesBst < NON_LEGENDARY_BST_THRESHOLD || speciesBst > SUPER_LEGENDARY_BST_THRESHOLD)) &&
+          (!hasPokemonBstHigherThan600 || speciesBst <= SUPER_LEGENDARY_BST_THRESHOLD);
+        return bstInRange && validBst && !EXCLUDED_TRANSFORMATION_SPECIES.includes(s.speciesId);
       });
 
     // There must be at least 20 species available before it will choose one

@@ -9,8 +9,7 @@ import { Gender } from "#app/data/gender";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
 import * as BattleAnims from "#app/data/battle-anims";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
-import { CommandPhase, MovePhase, SelectModifierPhase } from "#app/phases";
+import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import { Moves } from "#enums/moves";
 import BattleScene from "#app/battle-scene";
 import { PokemonHeldItemModifier } from "#app/modifier/modifier";
@@ -20,6 +19,9 @@ import { MysteryEncounterPhase } from "#app/phases/mystery-encounter-phases";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { initSceneWithoutEncounterPhase } from "#test/utils/gameManagerUtils";
+import { CommandPhase } from "#app/phases/command-phase";
+import { MovePhase } from "#app/phases/move-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
 
 const namespace = "mysteryEncounter:fieryFallout";
 /** Arcanine and Ninetails for 2 Fire types. Lapras, Gengar, Abra for burnable mon. */
@@ -211,7 +213,7 @@ describe("Fiery Fallout - Mystery Encounter", () => {
 
       const burnablePokemon = party.filter((pkm) => pkm.isAllowedInBattle() && !pkm.getTypes().includes(Type.FIRE));
       const notBurnablePokemon = party.filter((pkm) => !pkm.isAllowedInBattle() || pkm.getTypes().includes(Type.FIRE));
-      expect(scene.currentBattle.mysteryEncounter.dialogueTokens["burnedPokemon"]).toBe("Gengar");
+      expect(scene.currentBattle.mysteryEncounter?.dialogueTokens["burnedPokemon"]).toBe("Gengar");
       burnablePokemon.forEach((pkm) => {
         expect(pkm.hp, `${pkm.name} should have received 20% damage: ${pkm.hp} / ${pkm.getMaxHp()} HP`).toBe(pkm.getMaxHp() - Math.floor(pkm.getMaxHp() * 0.2));
       });

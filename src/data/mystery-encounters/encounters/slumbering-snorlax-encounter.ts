@@ -13,16 +13,16 @@ import { Moves } from "#enums/moves";
 import { BattlerIndex } from "#app/battle";
 import { PokemonMove } from "#app/field/pokemon";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
-import { PartyHealPhase } from "#app/phases";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
+import { PartyHealPhase } from "#app/phases/party-heal-phase";
 
 /** i18n namespace for the encounter */
 const namespace = "mysteryEncounter:slumberingSnorlax";
 
 /**
  * Sleeping Snorlax encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/103 | GitHub Issue #103}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3815 | GitHub Issue #3815}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const SlumberingSnorlaxEncounter: MysteryEncounter =
@@ -48,7 +48,7 @@ export const SlumberingSnorlaxEncounter: MysteryEncounter =
       },
     ])
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
       console.log(encounter);
 
       // Calculate boss mon
@@ -85,7 +85,7 @@ export const SlumberingSnorlaxEncounter: MysteryEncounter =
       },
       async (scene: BattleScene) => {
         // Pick battle
-        const encounter = scene.currentBattle.mysteryEncounter;
+        const encounter = scene.currentBattle.mysteryEncounter!;
         setEncounterRewards(scene, { guaranteedModifierTypeFuncs: [modifierTypes.LEFTOVERS], fillRemaining: true});
         encounter.startOfBattleEffects.push(
           {
@@ -137,7 +137,7 @@ export const SlumberingSnorlaxEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Steal the Snorlax's Leftovers
-          const instance = scene.currentBattle.mysteryEncounter;
+          const instance = scene.currentBattle.mysteryEncounter!;
           setEncounterRewards(scene, { guaranteedModifierTypeFuncs: [modifierTypes.LEFTOVERS], fillRemaining: false });
           // Snorlax exp to Pokemon that did the stealing
           setEncounterExp(scene, instance.primaryPokemon!.id, getPokemonSpecies(Species.SNORLAX).baseExp);

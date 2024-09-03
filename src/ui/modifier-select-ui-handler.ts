@@ -4,7 +4,7 @@ import { getPokeballAtlasKey, PokeballType } from "../data/pokeball";
 import { addTextObject, getTextStyleOptions, getModifierTierTextTint, getTextColor, TextStyle } from "./text";
 import AwaitableUiHandler from "./awaitable-ui-handler";
 import { Mode } from "./ui";
-import { LockModifierTiersModifier, PokemonHeldItemModifier, RemoveHealShopModifier } from "../modifier/modifier";
+import { LockModifierTiersModifier, PokemonHeldItemModifier, HealShopCostModifier } from "../modifier/modifier";
 import { handleTutorial, Tutorial } from "../tutorial";
 import { Button } from "#enums/buttons";
 import MoveInfoOverlay from "./move-info-overlay";
@@ -12,6 +12,8 @@ import { allMoves } from "../data/move";
 import * as Utils from "./../utils";
 import Overrides from "#app/overrides";
 import i18next from "i18next";
+import { ShopCursorTarget } from "#app/enums/shop-cursor-target";
+import { IntegerHolder } from "./../utils";
 
 export const SHOP_OPTIONS_ROW_LIMIT = 6;
 
@@ -170,9 +172,11 @@ export default class ModifierSelectUiHandler extends AwaitableUiHandler {
     this.updateRerollCostText();
 
     const typeOptions = args[1] as ModifierTypeOption[];
-    const removeHealShop = this.scene.gameMode.hasNoShop || !!this.scene.findModifier(m => m instanceof RemoveHealShopModifier);
+    const removeHealShop = this.scene.gameMode.hasNoShop;
+    const baseShopCost = new IntegerHolder(this.scene.getWaveMoneyAmount(1));
+    this.scene.applyModifier(HealShopCostModifier, true, baseShopCost);
     const shopTypeOptions = !removeHealShop
-      ? getPlayerShopModifierTypeOptionsForWave(this.scene.currentBattle.waveIndex, this.scene.getWaveMoneyAmount(1))
+      ? getPlayerShopModifierTypeOptionsForWave(this.scene.currentBattle.waveIndex, baseShopCost.value)
       : [];
     const optionsYOffset = shopTypeOptions.length >= SHOP_OPTIONS_ROW_LIMIT ? -8 : -24;
 
@@ -273,11 +277,22 @@ export default class ModifierSelectUiHandler extends AwaitableUiHandler {
         duration: 250
       });
 
-      this.setCursor(0);
-      this.setRowCursor(1);
+      const updateCursorTarget = () => {
+        if (this.scene.shopCursorTarget === ShopCursorTarget.CHECK_TEAM) {
+          this.setRowCursor(0);
+          this.setCursor(2);
+        } else {
+          this.setRowCursor(this.scene.shopCursorTarget);
+          this.setCursor(0);
+        }
+      };
 
-      handleTutorial(this.scene, Tutorial.Select_Item).then(() => {
-        this.setCursor(0);
+      updateCursorTarget();
+
+      handleTutorial(this.scene, Tutorial.Select_Item).then((res) => {
+        if (res) {
+          updateCursorTarget();
+        }
         this.awaitingActionInput = true;
         this.onActionInput = args[2];
       });
@@ -346,7 +361,11 @@ export default class ModifierSelectUiHandler extends AwaitableUiHandler {
             success = false;
             break;
           case 1:
-            success = this.rerollButtonContainer.visible && this.setCursor(0);
+            if (this.lockRarityButtonContainer.visible) {
+              success = this.setCursor(3);
+            } else {
+              success = this.rerollButtonContainer.visible && this.setCursor(0);
+            }
             break;
           case 2:
             if (this.transferButtonContainer.visible) {
@@ -379,6 +398,13 @@ export default class ModifierSelectUiHandler extends AwaitableUiHandler {
             break;
           case 2:
             success = false;
+            break;
+          case 3:
+            if (this.transferButtonContainer.visible) {
+              success = this.setCursor(1);
+            } else {
+              success = this.setCursor(2);
+            }
             break;
           }
         } else if (this.cursor < this.getRowItems(this.rowCursor) - 1) {
@@ -670,7 +696,7 @@ class ModifierOption extends Phaser.GameObjects.Container {
           }
           const value = t.getValue();
           if (!bounce && value > lastValue) {
-            (this.scene as BattleScene).playSound("pb_bounce_1", { volume: 1 / ++bounceCount });
+            (this.scene as BattleScene).playSound("se/pb_bounce_1", { volume: 1 / ++bounceCount });
             bounce = true;
           } else if (bounce && value < lastValue) {
             bounce = false;
@@ -682,7 +708,7 @@ class ModifierOption extends Phaser.GameObjects.Container {
       for (let u = 0; u < this.modifierTypeOption.upgradeCount; u++) {
         const upgradeIndex = u;
         this.scene.time.delayedCall(remainingDuration - 2000 * (this.modifierTypeOption.upgradeCount - (upgradeIndex + 1 + upgradeCountOffset)), () => {
-          (this.scene as BattleScene).playSound("upgrade", { rate: 1 + 0.25 * upgradeIndex });
+          (this.scene as BattleScene).playSound("se/upgrade", { rate: 1 + 0.25 * upgradeIndex });
           this.pbTint.setPosition(this.pb.x, this.pb.y);
           this.pbTint.setTintFill(0xFFFFFF);
           this.pbTint.setAlpha(0);
@@ -716,7 +742,7 @@ class ModifierOption extends Phaser.GameObjects.Container {
 
       if (!this.modifierTypeOption.cost) {
         this.pb.setTexture("pb", `${this.getPbAtlasKey(0)}_open`);
-        (this.scene as BattleScene).playSound("pb_rel");
+        (this.scene as BattleScene).playSound("se/pb_rel");
 
         this.scene.tweens.add({
           targets: this.pb,

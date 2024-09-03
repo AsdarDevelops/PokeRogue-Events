@@ -22,7 +22,7 @@ const MAX_POKEMON_PRICE_MULTIPLIER = 6;
 
 /**
  * Pokemon Salesman encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/36 | GitHub Issue #36}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3799 | GitHub Issue #3799}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const ThePokemonSalesmanEncounter: MysteryEncounter =
@@ -51,7 +51,7 @@ export const ThePokemonSalesmanEncounter: MysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       let species = getPokemonSpecies(getRandomSpeciesByStarterTier([0, 5]));
       const tries = 0;
@@ -118,7 +118,7 @@ export const ThePokemonSalesmanEncounter: MysteryEncounter =
           ],
         })
         .withOptionPhase(async (scene: BattleScene) => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const price = encounter.misc.price;
           const purchasedPokemon = encounter.misc.pokemon as PlayerPokemon;
 

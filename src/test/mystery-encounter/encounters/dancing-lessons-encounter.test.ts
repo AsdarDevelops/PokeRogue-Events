@@ -4,18 +4,21 @@ import { Species } from "#app/enums/species";
 import GameManager from "#app/test/utils/gameManager";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
+import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import BattleScene from "#app/battle-scene";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import * as MysteryEncounters from "#app/data/mystery-encounters/mystery-encounters";
-import { CommandPhase, LearnMovePhase, MovePhase, SelectModifierPhase } from "#app/phases";
 import { Moves } from "#enums/moves";
 import { DancingLessonsEncounter } from "#app/data/mystery-encounters/encounters/dancing-lessons-encounter";
 import { Mode } from "#app/ui/ui";
 import ModifierSelectUiHandler from "#app/ui/modifier-select-ui-handler";
 import { PokemonMove } from "#app/field/pokemon";
 import { MysteryEncounterPhase } from "#app/phases/mystery-encounter-phases";
+import { CommandPhase } from "#app/phases/command-phase";
+import { MovePhase } from "#app/phases/move-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
+import { LearnMovePhase } from "#app/phases/learn-move-phase";
 
 const namespace = "mysteryEncounter:dancingLessons";
 const defaultParty = [Species.LAPRAS, Species.GENGAR, Species.ABRA];
@@ -116,7 +119,7 @@ describe("Dancing Lessons - Mystery Encounter", () => {
       expect(scene.getCurrentPhase()?.constructor.name).toBe(CommandPhase.name);
       expect(enemyField.length).toBe(1);
       expect(enemyField[0].species.speciesId).toBe(Species.ORICORIO);
-      expect(enemyField[0].summonData.battleStats).toEqual([1, 1, 1, 1, 1, 0, 0]);
+      expect(enemyField[0].summonData.battleStats).toEqual([1, 1, 1, 1, 0, 0, 0]);
       const moveset = enemyField[0].moveset.map(m => m?.moveId);
       expect(moveset.some(m => m === Moves.REVELATION_DANCE)).toBeTruthy();
 

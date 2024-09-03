@@ -5,7 +5,7 @@ import { Species } from "#app/enums/species";
 import GameManager from "#app/test/utils/gameManager";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption } from "#test/mystery-encounter/encounterTestUtils";
+import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption } from "#test/mystery-encounter/encounter-test-utils";
 import BattleScene from "#app/battle-scene";
 import { CIVILIZATION_ENCOUNTER_BIOMES } from "#app/data/mystery-encounters/mystery-encounters";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
@@ -138,7 +138,7 @@ describe("Part-Timer - Mystery Encounter", () => {
       // Override party levels to 50 so stats can be fully reflective
       scene.getParty().forEach(p => {
         p.level = 50;
-        p.ivs = [20,20,20,20,20,20];
+        p.ivs = [20, 20, 20, 20, 20, 20];
         p.calculateStats();
       });
       await runMysteryEncounterToEnd(game, 1, { pokemonNo: 2 });
@@ -203,7 +203,7 @@ describe("Part-Timer - Mystery Encounter", () => {
       // Override party levels to 50 so stats can be fully reflective
       scene.getParty().forEach(p => {
         p.level = 50;
-        p.ivs = [20,20,20,20,20,20];
+        p.ivs = [20, 20, 20, 20, 20, 20];
         p.calculateStats();
       });
       await runMysteryEncounterToEnd(game, 2, { pokemonNo: 4 });

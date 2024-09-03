@@ -4,8 +4,7 @@ import { MysteryEncounterType } from "#app/enums/mystery-encounter-type";
 import { Species } from "#app/enums/species";
 import GameManager from "#app/test/utils/gameManager";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
-import { CommandPhase, SelectModifierPhase } from "#app/phases";
+import { runMysteryEncounterToEnd, runSelectMysteryEncounterOption, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import { Moves } from "#enums/moves";
 import BattleScene from "#app/battle-scene";
 import { PokemonMove } from "#app/field/pokemon";
@@ -17,6 +16,8 @@ import { initSceneWithoutEncounterPhase } from "#test/utils/gameManagerUtils";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
 import { FightOrFlightEncounter } from "#app/data/mystery-encounters/encounters/fight-or-flight-encounter";
 import { MysteryEncounterPhase } from "#app/phases/mystery-encounter-phases";
+import { CommandPhase } from "#app/phases/command-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
 
 const namespace = "mysteryEncounter:fightOrFlight";
 const defaultParty = [Species.LAPRAS, Species.GENGAR, Species.ABRA];
@@ -119,7 +120,7 @@ describe("Fight or Flight - Mystery Encounter", () => {
     it("should start a fight against the boss", async () => {
       await game.runToMysteryEncounter(MysteryEncounterType.FIGHT_OR_FLIGHT, defaultParty);
 
-      const config = game.scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0];
+      const config = game.scene.currentBattle.mysteryEncounter!.enemyPartyConfigs[0];
       const speciesToSpawn = config.pokemonConfigs?.[0].species.speciesId;
 
       await runMysteryEncounterToEnd(game, 1, undefined, true);
@@ -133,7 +134,7 @@ describe("Fight or Flight - Mystery Encounter", () => {
     it("should reward the player with the item based on wave", async () => {
       await game.runToMysteryEncounter(MysteryEncounterType.FIGHT_OR_FLIGHT, defaultParty);
 
-      const item = game.scene.currentBattle.mysteryEncounter.misc;
+      const item = game.scene.currentBattle.mysteryEncounter?.misc;
 
       await runMysteryEncounterToEnd(game, 1, undefined, true);
       await skipBattleRunMysteryEncounterRewardsPhase(game);
@@ -192,7 +193,7 @@ describe("Fight or Flight - Mystery Encounter", () => {
 
       // Mock moveset
       scene.getParty()[0].moveset = [new PokemonMove(Moves.KNOCK_OFF)];
-      const item = game.scene.currentBattle.mysteryEncounter.misc;
+      const item = game.scene.currentBattle.mysteryEncounter!.misc;
 
       await runMysteryEncounterToEnd(game, 2);
       await game.phaseInterceptor.to(SelectModifierPhase, false);

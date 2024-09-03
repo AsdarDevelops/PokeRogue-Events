@@ -11,7 +11,7 @@ import { Species } from "#enums/species";
 import { Mode } from "#app/ui/ui";
 import { PlayerPokemon } from "#app/field/pokemon";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
-import { SelectModifierPhase } from "#app/phases";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
 
 describe("SelectModifierPhase", () => {
   let phaserGame: Phaser.Game;

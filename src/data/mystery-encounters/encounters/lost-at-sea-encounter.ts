@@ -23,7 +23,7 @@ const namespace = "mysteryEncounter:lostAtSea";
 
 /**
  * Lost at sea encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/9 | GitHub Issue #9}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3793 | GitHub Issue #3793}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const LostAtSeaEncounter: MysteryEncounter = MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.LOST_AT_SEA)
@@ -40,11 +40,11 @@ export const LostAtSeaEncounter: MysteryEncounter = MysteryEncounterBuilder.with
   ])
   .withIntroDialogue([{ text: `${namespace}.intro` }])
   .withOnInit((scene: BattleScene) => {
-    const { mysteryEncounter } = scene.currentBattle;
+    const encounter = scene.currentBattle.mysteryEncounter!;
 
-    mysteryEncounter.setDialogueToken("damagePercentage", String(DAMAGE_PERCENTAGE));
-    mysteryEncounter.setDialogueToken("option1RequiredMove", Moves[OPTION_1_REQUIRED_MOVE]);
-    mysteryEncounter.setDialogueToken("option2RequiredMove", Moves[OPTION_2_REQUIRED_MOVE]);
+    encounter.setDialogueToken("damagePercentage", String(DAMAGE_PERCENTAGE));
+    encounter.setDialogueToken("option1RequiredMove", Moves[OPTION_1_REQUIRED_MOVE]);
+    encounter.setDialogueToken("option2RequiredMove", Moves[OPTION_2_REQUIRED_MOVE]);
 
     return true;
   })
@@ -125,13 +125,12 @@ export const LostAtSeaEncounter: MysteryEncounter = MysteryEncounterBuilder.with
  * Generic handler for using a guiding pokemon to guide you back.
  *
  * @param scene Battle scene
- * @param guidePokemon pokemon choosen as a guide
  */
 async function handlePokemonGuidingYouPhase(scene: BattleScene) {
   const laprasSpecies = getPokemonSpecies(Species.LAPRAS);
   const { mysteryEncounter } = scene.currentBattle;
 
-  if (mysteryEncounter.selectedOption?.primaryPokemon?.id) {
+  if (mysteryEncounter?.selectedOption?.primaryPokemon?.id) {
     setEncounterExp(scene, mysteryEncounter.selectedOption.primaryPokemon.id, laprasSpecies.baseExp, true);
   } else {
     console.warn("Lost at sea: No guide pokemon found but pokemon guides player. huh!?");

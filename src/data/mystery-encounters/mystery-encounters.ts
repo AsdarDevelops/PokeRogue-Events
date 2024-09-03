@@ -26,6 +26,10 @@ import { PartTimerEncounter } from "#app/data/mystery-encounters/encounters/part
 import { DancingLessonsEncounter } from "#app/data/mystery-encounters/encounters/dancing-lessons-encounter";
 import { WeirdDreamEncounter } from "#app/data/mystery-encounters/encounters/weird-dream-encounter";
 import { TheWinstrateChallengeEncounter } from "#app/data/mystery-encounters/encounters/the-winstrate-challenge-encounter";
+import { TeleportingHijinksEncounter } from "#app/data/mystery-encounters/encounters/teleporting-hijinks-encounter";
+import { BugTypeSuperfanEncounter } from "#app/data/mystery-encounters/encounters/bug-type-superfan-encounter";
+import { FunAndGamesEncounter } from "#app/data/mystery-encounters/encounters/fun-and-games-encounter";
+import { UncommonBreedEncounter } from "#app/data/mystery-encounters/encounters/uncommon-breed-encounter";
 
 // Spawn chance: (BASE_MYSTERY_ENCOUNTER_SPAWN_WEIGHT + WIGHT_INCREMENT_ON_SPAWN_MISS * <number of missed spawns>) / 256
 export const BASE_MYSTERY_ENCOUNTER_SPAWN_WEIGHT = 1;
@@ -153,7 +157,8 @@ const humanTransitableBiomeEncounters: MysteryEncounterType[] = [
 
 const civilizationBiomeEncounters: MysteryEncounterType[] = [
   MysteryEncounterType.DEPARTMENT_STORE_SALE,
-  MysteryEncounterType.PART_TIMER
+  MysteryEncounterType.PART_TIMER,
+  MysteryEncounterType.FUN_AND_GAMES
 ];
 
 /**
@@ -169,7 +174,10 @@ const anyBiomeEncounters: MysteryEncounterType[] = [
   MysteryEncounterType.TRASH_TO_TREASURE,
   MysteryEncounterType.BERRIES_ABOUND,
   MysteryEncounterType.CLOWNING_AROUND,
-  MysteryEncounterType.WEIRD_DREAM
+  MysteryEncounterType.WEIRD_DREAM,
+  MysteryEncounterType.TELEPORTING_HIJINKS,
+  MysteryEncounterType.BUG_TYPE_SUPERFAN,
+  MysteryEncounterType.UNCOMMON_BREED
 ];
 
 /**
@@ -273,6 +281,10 @@ export function initMysteryEncounters() {
   allMysteryEncounters[MysteryEncounterType.DANCING_LESSONS] = DancingLessonsEncounter;
   allMysteryEncounters[MysteryEncounterType.WEIRD_DREAM] = WeirdDreamEncounter;
   allMysteryEncounters[MysteryEncounterType.THE_WINSTRATE_CHALLENGE] = TheWinstrateChallengeEncounter;
+  allMysteryEncounters[MysteryEncounterType.TELEPORTING_HIJINKS] = TeleportingHijinksEncounter;
+  allMysteryEncounters[MysteryEncounterType.BUG_TYPE_SUPERFAN] = BugTypeSuperfanEncounter;
+  allMysteryEncounters[MysteryEncounterType.FUN_AND_GAMES] = FunAndGamesEncounter;
+  allMysteryEncounters[MysteryEncounterType.UNCOMMON_BREED] = UncommonBreedEncounter;
 
   // Add extreme encounters to biome map
   extremeBiomeEncounters.forEach(encounter => {

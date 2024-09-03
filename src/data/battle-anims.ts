@@ -339,11 +339,11 @@ class AnimTimedSoundEvent extends AnimTimedEvent {
     const soundConfig = { rate: (this.pitch * 0.01), volume: (this.volume * 0.01) };
     if (this.resourceName) {
       try {
-        scene.playSound(this.resourceName, soundConfig);
+        scene.playSound(`battle_anims/${this.resourceName}`, soundConfig);
       } catch (err) {
         console.error(err);
       }
-      return Math.ceil((scene.sound.get(this.resourceName).totalDuration * 1000) / 33.33);
+      return Math.ceil((scene.sound.get(`battle_anims/${this.resourceName}`).totalDuration * 1000) / 33.33);
     } else {
       return Math.ceil((battleAnim.user!.cry(soundConfig).totalDuration * 1000) / 33.33); // TODO: is the bang behind user correct?
     }
@@ -891,6 +891,8 @@ export abstract class BattleAnim {
               const isUser = frame.target === AnimFrameTarget.USER;
               if (isUser && target === user) {
                 continue;
+              } else if (this.playOnEmptyField && frame.target === AnimFrameTarget.TARGET) {
+                continue;
               }
               const sprites = spriteCache[isUser ? AnimFrameTarget.USER : AnimFrameTarget.TARGET];
               const spriteSource = isUser ? userSprite : targetSprite;
@@ -1045,7 +1047,7 @@ export abstract class BattleAnim {
       let t = 0;
 
       for (const frame of frames) {
-        let { x , y } = frame;
+        let { x, y } = frame;
         const scaleX = (frame.zoomX / 100) * (!frame.mirror ? 1 : -1);
         const scaleY = (frame.zoomY / 100);
         x += targetInitialX;
@@ -1105,12 +1107,13 @@ export abstract class BattleAnim {
       let r = anim!.frames.length;
       let f = 0;
 
-      const existingFieldSprites = [...scene.field.getAll()];
+      let existingFieldSprites = scene.field.getAll().slice(0);
 
       scene.tweens.addCounter({
         duration: Utils.getFrameMs(3) * frameTimeMult,
         repeat: anim!.frames.length,
         onRepeat: () => {
+          existingFieldSprites = scene.field.getAll().slice(0);
           const spriteFrames = anim!.frames[f];
           const frameData = this.getGraphicFrameDataWithoutTarget(anim!.frames[f], targetInitialX, targetInitialY);
           const u = 0;
@@ -1137,7 +1140,8 @@ export abstract class BattleAnim {
               const setSpritePriority = (priority: integer) => {
                 if (existingFieldSprites.length > priority) {
                   // Move to specified priority index
-                  scene.field.moveTo(moveSprite, scene.field.getIndex(existingFieldSprites[priority]));
+                  const index = scene.field.getIndex(existingFieldSprites[priority]);
+                  scene.field.moveTo(moveSprite, index);
                 } else {
                   // Move to top of scene
                   scene.field.moveTo(moveSprite, scene.field.getAll().length - 1);
@@ -1223,8 +1227,8 @@ export class CommonBattleAnim extends BattleAnim {
 export class MoveAnim extends BattleAnim {
   public move: Moves;
 
-  constructor(move: Moves, user: Pokemon, target: BattlerIndex) {
-    super(user, user.scene.getField()[target]);
+  constructor(move: Moves, user: Pokemon, target: BattlerIndex, playOnEmptyField: boolean = false) {
+    super(user, user.scene.getField()[target], playOnEmptyField);
 
     this.move = move;
   }

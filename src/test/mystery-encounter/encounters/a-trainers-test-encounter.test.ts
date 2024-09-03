@@ -6,14 +6,16 @@ import { Species } from "#app/enums/species";
 import GameManager from "#app/test/utils/gameManager";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
+import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import BattleScene from "#app/battle-scene";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { initSceneWithoutEncounterPhase } from "#test/utils/gameManagerUtils";
 import { ATrainersTestEncounter } from "#app/data/mystery-encounters/encounters/a-trainers-test-encounter";
-import { CommandPhase, PartyHealPhase, SelectModifierPhase } from "#app/phases";
 import { EggTier } from "#enums/egg-type";
+import { CommandPhase } from "#app/phases/command-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
+import { PartyHealPhase } from "#app/phases/party-heal-phase";
 
 const namespace = "mysteryEncounter:aTrainersTest";
 const defaultParty = [Species.LAPRAS, Species.GENGAR, Species.ABRA];

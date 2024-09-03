@@ -8,8 +8,7 @@ import { getPokemonSpecies } from "#app/data/pokemon-species";
 import * as BattleAnims from "#app/data/battle-anims";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
 import { generateModifierType } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
-import { CommandPhase, MovePhase, NewBattlePhase, SelectModifierPhase } from "#app/phases";
+import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import { Moves } from "#enums/moves";
 import BattleScene from "#app/battle-scene";
 import Pokemon, { PokemonMove } from "#app/field/pokemon";
@@ -29,6 +28,10 @@ import { modifierTypes, PokemonHeldItemModifierType } from "#app/modifier/modifi
 import { BerryType } from "#enums/berry-type";
 import { PokemonHeldItemModifier } from "#app/modifier/modifier";
 import { Type } from "#app/data/type";
+import { CommandPhase } from "#app/phases/command-phase";
+import { MovePhase } from "#app/phases/move-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
+import { NewBattlePhase } from "#app/phases/new-battle-phase";
 
 const namespace = "mysteryEncounter:clowningAround";
 const defaultParty = [Species.LAPRAS, Species.GENGAR, Species.ABRA];
@@ -196,7 +199,7 @@ describe("Clowning Around - Mystery Encounter", () => {
       await game.phaseInterceptor.to(SelectModifierPhase, false);
       expect(scene.getCurrentPhase()?.constructor.name).toBe(SelectModifierPhase.name);
       await game.phaseInterceptor.run(SelectModifierPhase);
-      const abilityToTrain = scene.currentBattle.mysteryEncounter.misc.ability;
+      const abilityToTrain = scene.currentBattle.mysteryEncounter?.misc.ability;
 
       game.onNextPrompt("PostMysteryEncounterPhase", Mode.MESSAGE, () => {
         game.scene.ui.getHandler().processInput(Button.ACTION);
@@ -298,7 +301,7 @@ describe("Clowning Around - Mystery Encounter", () => {
       expect(secondItemsAfter.length).toBe(1);
       expect(secondItemsAfter[0].type.id).toBe("SOUL_DEW");
       expect(secondItemsAfter[0]?.stackCount).toBe(5);
-    }, 2000000);
+    });
 
     it("should leave encounter without battle", async () => {
       const leaveEncounterWithoutBattleSpy = vi.spyOn(EncounterPhaseUtils, "leaveEncounterWithoutBattle");

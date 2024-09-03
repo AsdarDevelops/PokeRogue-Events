@@ -7,8 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { getPokemonSpecies } from "#app/data/pokemon-species";
 import * as BattleAnims from "#app/data/battle-anims";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
-import { CommandPhase, MovePhase, SelectModifierPhase } from "#app/phases";
+import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import { Moves } from "#enums/moves";
 import BattleScene from "#app/battle-scene";
 import { TheStrongStuffEncounter } from "#app/data/mystery-encounters/encounters/the-strong-stuff-encounter";
@@ -23,6 +22,9 @@ import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { initSceneWithoutEncounterPhase } from "#test/utils/gameManagerUtils";
 import { MysteryEncounterPokemonData } from "#app/data/mystery-encounters/mystery-encounter-pokemon-data";
+import { CommandPhase } from "#app/phases/command-phase";
+import { MovePhase } from "#app/phases/move-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
 
 const namespace = "mysteryEncounter:theStrongStuff";
 const defaultParty = [Species.LAPRAS, Species.GENGAR, Species.ABRA];
@@ -162,9 +164,10 @@ describe("The Strong Stuff - Mystery Encounter", () => {
         return baseStats.reduce((a, b) => a + b);
       });
 
-      expect(bstsAfter[0]).toEqual(bstsPrior[0] - 20 * 6);
-      expect(bstsAfter[1]).toEqual(bstsPrior[1] + 10 * 6);
-      expect(bstsAfter[2]).toEqual(bstsPrior[2] + 10 * 6);
+      // HP stat changes are halved compared to other values
+      expect(bstsAfter[0]).toEqual(bstsPrior[0] - 20 * 5 - 10);
+      expect(bstsAfter[1]).toEqual(bstsPrior[1] + 10 * 5 + 5);
+      expect(bstsAfter[2]).toEqual(bstsPrior[2] + 10 * 5 + 5);
     });
 
     it("should leave encounter without battle", async () => {

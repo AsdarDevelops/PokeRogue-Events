@@ -7,18 +7,18 @@ import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter"
 import { MysteryEncounterOptionBuilder } from "../mystery-encounter-option";
 import { AbilityRequirement, CombinationPokemonRequirement, MoveRequirement } from "../mystery-encounter-requirements";
 import { getHighestStatTotalPlayerPokemon } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
-import { ModifierRewardPhase } from "#app/phases";
 import { EXTORTION_ABILITIES, EXTORTION_MOVES } from "#app/data/mystery-encounters/requirements/requirement-groups";
 import { getPokemonSpecies } from "#app/data/pokemon-species";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
+import { ModifierRewardPhase } from "#app/phases/modifier-reward-phase";
 
 /** the i18n namespace for this encounter */
 const namespace = "mysteryEncounter:offerYouCantRefuse";
 
 /**
  * An Offer You Can't Refuse encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/72 | GitHub Issue #72}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3808 | GitHub Issue #3808}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const AnOfferYouCantRefuseEncounter: MysteryEncounter =
@@ -58,7 +58,7 @@ export const AnOfferYouCantRefuseEncounter: MysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
       const pokemon = getHighestStatTotalPlayerPokemon(scene, false);
       const price = scene.getWaveMoneyAmount(10);
 
@@ -99,7 +99,7 @@ export const AnOfferYouCantRefuseEncounter: MysteryEncounter =
           ],
         })
         .withPreOptionPhase(async (scene: BattleScene): Promise<boolean> => {
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           // Update money and remove pokemon from party
           updatePlayerMoney(scene, encounter.misc.price);
           scene.removePokemonFromPlayerParty(encounter.misc.pokemon);
@@ -132,7 +132,7 @@ export const AnOfferYouCantRefuseEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Extort the rich kid for money
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           // Update money and remove pokemon from party
           updatePlayerMoney(scene, encounter.misc.price);
 

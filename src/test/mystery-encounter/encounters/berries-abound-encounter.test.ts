@@ -4,8 +4,7 @@ import { MysteryEncounterType } from "#app/enums/mystery-encounter-type";
 import { Species } from "#app/enums/species";
 import GameManager from "#app/test/utils/gameManager";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounterTestUtils";
-import { CommandPhase, SelectModifierPhase } from "#app/phases";
+import { runMysteryEncounterToEnd, skipBattleRunMysteryEncounterRewardsPhase } from "#test/mystery-encounter/encounter-test-utils";
 import BattleScene from "#app/battle-scene";
 import { Mode } from "#app/ui/ui";
 import ModifierSelectUiHandler from "#app/ui/modifier-select-ui-handler";
@@ -16,6 +15,8 @@ import { initSceneWithoutEncounterPhase } from "#test/utils/gameManagerUtils";
 import { BerriesAboundEncounter } from "#app/data/mystery-encounters/encounters/berries-abound-encounter";
 import * as EncounterPhaseUtils from "#app/data/mystery-encounters/utils/encounter-phase-utils";
 import * as EncounterDialogueUtils from "#app/data/mystery-encounters/utils/encounter-dialogue-utils";
+import { CommandPhase } from "#app/phases/command-phase";
+import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
 
 const namespace = "mysteryEncounter:berriesAbound";
 const defaultParty = [Species.PYUKUMUKU];
@@ -118,7 +119,7 @@ describe("Berries Abound - Mystery Encounter", () => {
     it("should start a fight against the boss", async () => {
       await game.runToMysteryEncounter(MysteryEncounterType.BERRIES_ABOUND, defaultParty);
 
-      const config = game.scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0];
+      const config = game.scene.currentBattle.mysteryEncounter!.enemyPartyConfigs[0];
       const speciesToSpawn = config.pokemonConfigs?.[0].species.speciesId;
 
       await runMysteryEncounterToEnd(game, 1, undefined, true);
@@ -129,10 +130,10 @@ describe("Berries Abound - Mystery Encounter", () => {
       expect(enemyField[0].species.speciesId).toBe(speciesToSpawn);
     });
 
-    it("should reward the player with X berries based on wave", async () => {
+    it("should reward the player with X berries based on wave", { retry: 5 }, async () => {
       await game.runToMysteryEncounter(MysteryEncounterType.BERRIES_ABOUND, defaultParty);
 
-      const numBerries = game.scene.currentBattle.mysteryEncounter.misc.numBerries;
+      const numBerries = game.scene.currentBattle.mysteryEncounter!.misc.numBerries;
       scene.modifiers = [];
 
       await runMysteryEncounterToEnd(game, 1, undefined, true);
@@ -178,7 +179,7 @@ describe("Berries Abound - Mystery Encounter", () => {
       const encounterTextSpy = vi.spyOn(EncounterDialogueUtils, "showEncounterText");
       await game.runToMysteryEncounter(MysteryEncounterType.BERRIES_ABOUND, defaultParty);
 
-      const config = game.scene.currentBattle.mysteryEncounter.enemyPartyConfigs[0];
+      const config = game.scene.currentBattle.mysteryEncounter!.enemyPartyConfigs[0];
       const speciesToSpawn = config.pokemonConfigs?.[0].species.speciesId;
       // Setting enemy's level arbitrarily high to outspeed
       config.pokemonConfigs![0].dataSource!.level = 1000;

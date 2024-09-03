@@ -1,5 +1,5 @@
 import { EnemyPartyConfig, initBattleWithEnemyConfig, leaveEncounterWithoutBattle, selectPokemonForOption, setEncounterRewards, transitionMysteryEncounterIntroVisuals, } from "#app/data/mystery-encounters/utils/encounter-phase-utils";
-import Pokemon, { PlayerPokemon, PokemonMove } from "#app/field/pokemon";
+import Pokemon, { EnemyPokemon, PlayerPokemon, PokemonMove } from "#app/field/pokemon";
 import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import { Species } from "#enums/species";
 import BattleScene from "#app/battle-scene";
@@ -15,7 +15,6 @@ import { Biome } from "#enums/biome";
 import { EncounterAnim, EncounterBattleAnim } from "#app/data/battle-anims";
 import { BattlerTagType } from "#enums/battler-tag-type";
 import { getEncounterText, queueEncounterMessage } from "#app/data/mystery-encounters/utils/encounter-dialogue-utils";
-import { LearnMovePhase, StatChangePhase } from "#app/phases";
 import { BattleStat } from "#app/data/battle-stat";
 import { MoveRequirement } from "#app/data/mystery-encounters/mystery-encounter-requirements";
 import { DANCING_MOVES } from "#app/data/mystery-encounters/requirements/requirement-groups";
@@ -24,6 +23,8 @@ import { BattlerIndex } from "#app/battle";
 import { catchPokemon } from "#app/data/mystery-encounters/utils/encounter-pokemon-utils";
 import { PokeballType } from "#enums/pokeball";
 import { modifierTypes } from "#app/modifier/modifier-type";
+import { StatChangePhase } from "#app/phases/stat-change-phase";
+import { LearnMovePhase } from "#app/phases/learn-move-phase";
 
 /** the i18n namespace for this encounter */
 const namespace = "mysteryEncounter:dancingLessons";
@@ -74,7 +75,7 @@ const SENSU_STYLE_BIOMES = [
 
 /**
  * Dancing Lessons encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/130 | GitHub Issue #130}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3823 | GitHub Issue #3823}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const DancingLessonsEncounter: MysteryEncounter =
@@ -87,7 +88,7 @@ export const DancingLessonsEncounter: MysteryEncounter =
     .withAutoHideIntroVisuals(false)
     .withCatchAllowed(true)
     .withOnVisualsStart((scene: BattleScene) => {
-      const danceAnim = new EncounterBattleAnim(EncounterAnim.DANCE, scene.getEnemyPokemon()!, scene.getPlayerPokemon());
+      const danceAnim = new EncounterBattleAnim(EncounterAnim.DANCE, scene.getEnemyPokemon()!, scene.getParty()[0]);
       danceAnim.play(scene);
 
       return true;
@@ -101,10 +102,11 @@ export const DancingLessonsEncounter: MysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       const species = getPokemonSpecies(Species.ORICORIO);
-      const enemyPokemon = scene.addEnemyPokemon(species, scene.currentBattle.enemyLevels![0], TrainerSlot.NONE, false);
+      const level = (scene.currentBattle.enemyLevels?.[0] ?? scene.currentBattle.waveIndex) + Math.max(Math.round((scene.currentBattle.waveIndex / 10)), 0);
+      const enemyPokemon = new EnemyPokemon(scene, species, level, TrainerSlot.NONE, false);
       if (!enemyPokemon.moveset.some(m => m && m.getMove().id === Moves.REVELATION_DANCE)) {
         if (enemyPokemon.moveset.length < 4) {
           enemyPokemon.moveset.push(new PokemonMove(Moves.REVELATION_DANCE));
@@ -129,10 +131,11 @@ export const DancingLessonsEncounter: MysteryEncounter =
       }
 
       const oricorioData = new PokemonData(enemyPokemon);
+      const oricorio = scene.addEnemyPokemon(species, scene.currentBattle.enemyLevels![0], TrainerSlot.NONE, false, oricorioData);
 
       // Adds a real Pokemon sprite to the field (required for the animation)
-      scene.currentBattle.enemyParty[0] = enemyPokemon;
-      scene.field.add(enemyPokemon);
+      scene.currentBattle.enemyParty[0] = oricorio;
+      scene.field.add(oricorio);
 
       const config: EnemyPartyConfig = {
         levelAdditiveMultiplier: 1,
@@ -140,11 +143,11 @@ export const DancingLessonsEncounter: MysteryEncounter =
           species: species,
           dataSource: oricorioData,
           isBoss: true,
-          // Gets +1 to all stats on battle start
+          // Gets +1 to all stats except SPD on battle start
           tags: [BattlerTagType.MYSTERY_ENCOUNTER_POST_SUMMON],
           mysteryEncounterBattleEffects: (pokemon: Pokemon) => {
             queueEncounterMessage(pokemon.scene, `${namespace}.option.1.boss_enraged`);
-            pokemon.scene.unshiftPhase(new StatChangePhase(pokemon.scene, pokemon.getBattlerIndex(), true, [BattleStat.ATK, BattleStat.DEF, BattleStat.SPATK, BattleStat.SPDEF, BattleStat.SPD], 1));
+            pokemon.scene.unshiftPhase(new StatChangePhase(pokemon.scene, pokemon.getBattlerIndex(), true, [BattleStat.ATK, BattleStat.DEF, BattleStat.SPATK, BattleStat.SPDEF], 1));
           }
         }],
       };
@@ -169,7 +172,7 @@ export const DancingLessonsEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Pick battle
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
 
           transitionMysteryEncounterIntroVisuals(scene, true, true, 500);
 
@@ -199,7 +202,7 @@ export const DancingLessonsEncounter: MysteryEncounter =
         })
         .withPreOptionPhase(async (scene: BattleScene) => {
           // Learn its Dance
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
 
           const onPokemonSelected = (pokemon: PlayerPokemon) => {
             encounter.setDialogueToken("selectedPokemon", pokemon.getNameToRender());
@@ -235,7 +238,7 @@ export const DancingLessonsEncounter: MysteryEncounter =
         })
         .withPreOptionPhase(async (scene: BattleScene) => {
           // Open menu for selecting pokemon with a Dancing move
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const onPokemonSelected = (pokemon: PlayerPokemon) => {
             // Return the options for nature selection
             return pokemon.moveset
@@ -271,7 +274,7 @@ export const DancingLessonsEncounter: MysteryEncounter =
         })
         .withOptionPhase(async (scene: BattleScene) => {
           // Show the Oricorio a dance, and recruit it
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
           const oricorio = encounter.misc.oricorioData.toPokemon(scene);
           oricorio.passive = true;
 

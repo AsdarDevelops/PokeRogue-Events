@@ -4,7 +4,6 @@ import { MysteryEncounterType } from "#enums/mystery-encounter-type";
 import BattleScene from "#app/battle-scene";
 import MysteryEncounter, { MysteryEncounterBuilder } from "../mystery-encounter";
 import { MysteryEncounterOptionBuilder } from "../mystery-encounter-option";
-import { ModifierRewardPhase } from "#app/phases";
 import { MysteryEncounterTier } from "#enums/mystery-encounter-tier";
 import { MysteryEncounterOptionMode } from "#enums/mystery-encounter-option-mode";
 import { Species } from "#enums/species";
@@ -17,6 +16,7 @@ import { getPokemonSpecies } from "#app/data/pokemon-species";
 import { Moves } from "#enums/moves";
 import { BattlerIndex } from "#app/battle";
 import { PokemonMove } from "#app/field/pokemon";
+import { ModifierRewardPhase } from "#app/phases/modifier-reward-phase";
 
 /** the i18n namespace for this encounter */
 const namespace = "mysteryEncounter:trashToTreasure";
@@ -25,13 +25,13 @@ const SOUND_EFFECT_WAIT_TIME = 700;
 
 /**
  * Trash to Treasure encounter.
- * @see {@link https://github.com/AsdarDevelops/PokeRogue-Events/issues/74 | GitHub Issue #74}
+ * @see {@link https://github.com/pagefaultgames/pokerogue/issues/3809 | GitHub Issue #3809}
  * @see For biome requirements check {@linkcode mysteryEncountersByBiome}
  */
 export const TrashToTreasureEncounter: MysteryEncounter =
   MysteryEncounterBuilder.withEncounterType(MysteryEncounterType.TRASH_TO_TREASURE)
     .withEncounterTier(MysteryEncounterTier.ULTRA)
-    .withSceneWaveRangeRequirement(10, 180)
+    .withSceneWaveRangeRequirement(60, 180)
     .withMaxAllowedEncounters(1)
     .withIntroSpriteConfigs([
       {
@@ -54,7 +54,7 @@ export const TrashToTreasureEncounter: MysteryEncounter =
     .withDescription(`${namespace}.description`)
     .withQuery(`${namespace}.query`)
     .withOnInit((scene: BattleScene) => {
-      const encounter = scene.currentBattle.mysteryEncounter;
+      const encounter = scene.currentBattle.mysteryEncounter!;
 
       // Calculate boss mon
       const bossSpecies = getPokemonSpecies(Species.GARBODOR);
@@ -124,7 +124,7 @@ export const TrashToTreasureEncounter: MysteryEncounter =
           await showEncounterText(scene, `${namespace}.option.2.selected_2`);
           transitionMysteryEncounterIntroVisuals(scene);
 
-          const encounter = scene.currentBattle.mysteryEncounter;
+          const encounter = scene.currentBattle.mysteryEncounter!;
 
           setEncounterRewards(scene, { guaranteedModifierTiers: [ModifierTier.ROGUE, ModifierTier.ROGUE, ModifierTier.ULTRA, ModifierTier.GREAT], fillRemaining: true });
           encounter.startOfBattleEffects.push(
@@ -209,12 +209,12 @@ async function tryApplyDigRewardItems(scene: BattleScene) {
 }
 
 async function doGarbageDig(scene: BattleScene) {
-  scene.playSound("PRSFX- Dig2");
+  scene.playSound("battle_anims/PRSFX- Dig2");
   scene.time.delayedCall(SOUND_EFFECT_WAIT_TIME, () => {
-    scene.playSound("PRSFX- Dig2");
-    scene.playSound("PRSFX- Venom Drench", { volume: 2 });
+    scene.playSound("battle_anims/PRSFX- Dig2");
+    scene.playSound("battle_anims/PRSFX- Venom Drench", { volume: 2 });
   });
   scene.time.delayedCall(SOUND_EFFECT_WAIT_TIME * 2, () => {
-    scene.playSound("PRSFX- Dig2");
+    scene.playSound("battle_anims/PRSFX- Dig2");
   });
 }

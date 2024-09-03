@@ -1,5 +1,4 @@
 import * as ModifierTypes from "./modifier-type";
-import { LearnMovePhase, LevelUpPhase, PokemonHealPhase } from "../phases";
 import BattleScene from "../battle-scene";
 import { getLevelTotalExp } from "../data/exp";
 import { MAX_PER_TYPE_POKEBALLS, PokeballType } from "../data/pokeball";
@@ -7,7 +6,7 @@ import Pokemon, { PlayerPokemon } from "../field/pokemon";
 import { Stat } from "../data/pokemon-stat";
 import { addTextObject, TextStyle } from "../ui/text";
 import { Type } from "../data/type";
-import { EvolutionPhase } from "../evolution-phase";
+import { EvolutionPhase } from "../phases/evolution-phase";
 import { FusionSpeciesFormEvolution, pokemonEvolutions, pokemonPrevolutions } from "../data/pokemon-evolutions";
 import { getPokemonNameWithAffix } from "../messages";
 import * as Utils from "../utils";
@@ -28,6 +27,9 @@ import i18next from "i18next";
 
 import { allMoves } from "#app/data/move";
 import { Abilities } from "#app/enums/abilities";
+import { LearnMovePhase } from "#app/phases/learn-move-phase.js";
+import { LevelUpPhase } from "#app/phases/level-up-phase.js";
+import { PokemonHealPhase } from "#app/phases/pokemon-heal-phase.js";
 
 export type ModifierPredicate = (modifier: Modifier) => boolean;
 
@@ -732,7 +734,8 @@ export class PokemonBaseStatTotalModifier extends PokemonHeldItemModifier {
   apply(args: any[]): boolean {
     // Modifies the passed in baseStats[] array
     args[1].forEach((v, i) => {
-      const newVal = Math.floor(v + this.statModifier);
+      // HP is affected by half as much as other stats
+      const newVal = i === 0 ? Math.floor(v + this.statModifier / 2) : Math.floor(v + this.statModifier);
       args[1][i] = Math.min(Math.max(newVal, 1), 999999);
     });
 
@@ -1299,7 +1302,7 @@ export class TurnHealModifier extends PokemonHeldItemModifier {
     if (!pokemon.isFullHp()) {
       const scene = pokemon.scene;
       scene.unshiftPhase(new PokemonHealPhase(scene, pokemon.getBattlerIndex(),
-        Math.max(Math.floor(pokemon.getMaxHp() / 16) * this.stackCount, 1), i18next.t("modifier:turnHealApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), true));
+        Utils.toDmgValue(pokemon.getMaxHp() / 16) * this.stackCount, i18next.t("modifier:turnHealApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), true));
       return true;
     }
 
@@ -1390,7 +1393,7 @@ export class HitHealModifier extends PokemonHeldItemModifier {
     if (pokemon.turnData.damageDealt && !pokemon.isFullHp()) {
       const scene = pokemon.scene;
       scene.unshiftPhase(new PokemonHealPhase(scene, pokemon.getBattlerIndex(),
-        Math.max(Math.floor(pokemon.turnData.damageDealt / 8) * this.stackCount, 1), i18next.t("modifier:hitHealApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), true));
+        Utils.toDmgValue(pokemon.turnData.damageDealt / 8) * this.stackCount, i18next.t("modifier:hitHealApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), true));
     }
 
     return true;
@@ -1525,7 +1528,7 @@ export class PokemonInstantReviveModifier extends PokemonHeldItemModifier {
     const pokemon = args[0] as Pokemon;
 
     pokemon.scene.unshiftPhase(new PokemonHealPhase(pokemon.scene, pokemon.getBattlerIndex(),
-      Math.max(Math.floor(pokemon.getMaxHp() / 2), 1), i18next.t("modifier:pokemonInstantReviveApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), false, false, true));
+      Utils.toDmgValue(pokemon.getMaxHp() / 2), i18next.t("modifier:pokemonInstantReviveApply", { pokemonNameWithAffix: getPokemonNameWithAffix(pokemon), typeName: this.type.name }), false, false, true));
 
     pokemon.resetStatus(true, false, true);
     return true;
@@ -2364,17 +2367,41 @@ export class LockModifierTiersModifier extends PersistentModifier {
   }
 }
 
-export class RemoveHealShopModifier extends PersistentModifier {
+export class HealShopCostModifier extends PersistentModifier {
   constructor(type: ModifierType, stackCount?: integer) {
     super(type, stackCount);
   }
 
   match(modifier: Modifier): boolean {
-    return modifier instanceof RemoveHealShopModifier;
+    return modifier instanceof HealShopCostModifier;
   }
 
-  clone(): RemoveHealShopModifier {
-    return new RemoveHealShopModifier(this.type, this.stackCount);
+  clone(): HealShopCostModifier {
+    return new HealShopCostModifier(this.type, this.stackCount);
+  }
+
+  apply(args: any[]): boolean {
+    (args[0] as Utils.IntegerHolder).value *= Math.pow(3, this.getStackCount());
+
+    return true;
+  }
+
+  getMaxStackCount(scene: BattleScene): integer {
+    return 1;
+  }
+}
+
+export class BoostBugSpawnModifier extends PersistentModifier {
+  constructor(type: ModifierType, stackCount?: integer) {
+    super(type, stackCount);
+  }
+
+  match(modifier: Modifier): boolean {
+    return modifier instanceof BoostBugSpawnModifier;
+  }
+
+  clone(): HealShopCostModifier {
+    return new BoostBugSpawnModifier(this.type, this.stackCount);
   }
 
   apply(args: any[]): boolean {
