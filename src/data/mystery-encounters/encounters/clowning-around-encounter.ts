@@ -275,11 +275,11 @@ export const ClowningAroundEncounter: MysteryEncounter =
             .forEach(m => {
               const type = m.type.withTierFromPool();
               const tier = type.tier ?? ModifierTier.ULTRA;
-              if (type.id === "LUCKY_EGG" || tier === ModifierTier.ULTRA) {
-                numUltra += m.stackCount;
-                scene.removeModifier(m);
-              } else if (type.id === "GOLDEN_EGG" || tier === ModifierTier.ROGUE) {
+              if (type.id === "GOLDEN_EGG" || tier === ModifierTier.ROGUE) {
                 numRogue += m.stackCount;
+                scene.removeModifier(m);
+              } else if (type.id === "LUCKY_EGG" || tier === ModifierTier.ULTRA) {
+                numUltra += m.stackCount;
                 scene.removeModifier(m);
               }
             });
@@ -294,7 +294,7 @@ export const ClowningAroundEncounter: MysteryEncounter =
           // Play animations
           const background = new EncounterBattleAnim(EncounterAnim.SMOKESCREEN, scene.getPlayerPokemon()!, scene.getPlayerPokemon());
           background.playWithoutTargets(scene, 230, 40, 2);
-          await transitionMysteryEncounterIntroVisuals(scene);
+          await transitionMysteryEncounterIntroVisuals(scene, true, true, 200);
         })
         .build()
     )
@@ -319,8 +319,8 @@ export const ClowningAroundEncounter: MysteryEncounter =
           ],
         })
         .withPreOptionPhase(async (scene: BattleScene) => {
-          // Swap player's types on all party pokemon
-          // If a Pokemon had a single type prior, they will still have a single type after
+          // Randomize the second type of all player's pokemon
+          // If the pokemon does not normally have a second type, it will gain 1
           for (const pokemon of scene.getParty()) {
             const originalTypes = pokemon.getTypes(false, false, true);
 
@@ -334,21 +334,16 @@ export const ClowningAroundEncounter: MysteryEncounter =
               randSeedShuffle(priorityTypes);
             }
 
-            let newTypes: Type[];
-            if (!originalTypes || originalTypes.length < 1) {
-              newTypes = priorityTypes && priorityTypes.length > 0 ? [priorityTypes.pop()!] : [(randSeedInt(18) as Type)];
-            } else {
-              newTypes = originalTypes.map(m => {
-                if (priorityTypes && priorityTypes.length > 0) {
-                  const ret = priorityTypes.pop()!;
-                  randSeedShuffle(priorityTypes);
-                  return ret;
-                }
-
-                return randSeedInt(18) as Type;
-              });
+            const newTypes = [originalTypes[0]];
+            let secondType: Type | null = null;
+            while (secondType === null || secondType === newTypes[0] || originalTypes.includes(secondType)) {
+              if (priorityTypes.length > 0) {
+                secondType = priorityTypes.pop() ?? null;
+              } else {
+                secondType = randSeedInt(18) as Type;
+              }
             }
-
+            newTypes.push(secondType);
             if (!pokemon.mysteryEncounterData) {
               pokemon.mysteryEncounterData = new MysteryEncounterPokemonData(undefined, undefined, undefined, newTypes);
             } else {
@@ -363,7 +358,7 @@ export const ClowningAroundEncounter: MysteryEncounter =
           // Play animations
           const background = new EncounterBattleAnim(EncounterAnim.SMOKESCREEN, scene.getPlayerPokemon()!, scene.getPlayerPokemon());
           background.playWithoutTargets(scene, 230, 40, 2);
-          await transitionMysteryEncounterIntroVisuals(scene);
+          await transitionMysteryEncounterIntroVisuals(scene, true, true, 200);
         })
         .build()
     )

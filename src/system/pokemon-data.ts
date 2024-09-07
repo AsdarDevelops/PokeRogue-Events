@@ -43,6 +43,7 @@ export default class PokemonData {
   public luck: integer;
   public pauseEvolutions: boolean;
   public pokerus: boolean;
+  public usedTMs: Moves[];
 
   public fusionSpecies: Species;
   public fusionFormIndex: integer;
@@ -100,6 +101,9 @@ export default class PokemonData {
     this.fusionVariant = source.fusionVariant;
     this.fusionGender = source.fusionGender;
     this.fusionLuck = source.fusionLuck !== undefined ? source.fusionLuck : (source.fusionShiny ? source.fusionVariant + 1 : 0);
+    this.usedTMs = source.usedTMs ?? [];
+
+    this.mysteryEncounterData = source.mysteryEncounterData ?? new MysteryEncounterPokemonData();
 
     if (!forHistory) {
       this.boss = (source instanceof EnemyPokemon && !!source.bossSegments) || (!this.player && !!source.boss);
@@ -112,7 +116,6 @@ export default class PokemonData {
         this.status = sourcePokemon.status;
         if (this.player) {
           this.summonData = sourcePokemon.summonData;
-          this.mysteryEncounterData = sourcePokemon.mysteryEncounterData;
         }
       }
     } else {
@@ -125,10 +128,9 @@ export default class PokemonData {
 
       this.summonData = new PokemonSummonData();
       if (!forHistory && source.summonData) {
-        this.summonData.battleStats = source.summonData.battleStats;
+        this.summonData.stats = source.summonData.stats;
+        this.summonData.statStages = source.summonData.statStages;
         this.summonData.moveQueue = source.summonData.moveQueue;
-        this.summonData.disabledMove = source.summonData.disabledMove;
-        this.summonData.disabledTurns = source.summonData.disabledTurns;
         this.summonData.abilitySuppressed = source.summonData.abilitySuppressed;
         this.summonData.abilitiesApplied = source.summonData.abilitiesApplied;
 
@@ -141,14 +143,6 @@ export default class PokemonData {
         } else {
           this.summonData.tags = [];
         }
-      }
-
-      this.mysteryEncounterData = new MysteryEncounterPokemonData();
-      if (!forHistory && source.mysteryEncounterData) {
-        this.mysteryEncounterData.spriteScale = source.mysteryEncounterData.spriteScale;
-        this.mysteryEncounterData.ability = source.mysteryEncounterData.ability;
-        this.mysteryEncounterData.passive = source.mysteryEncounterData.passive;
-        this.mysteryEncounterData.types = source.mysteryEncounterData.types;
       }
     }
   }

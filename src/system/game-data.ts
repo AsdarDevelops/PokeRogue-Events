@@ -91,7 +91,7 @@ export function encrypt(data: string, bypassLogin: boolean): string {
 
 export function decrypt(data: string, bypassLogin: boolean): string {
   return (bypassLogin
-    ? (data: string) => decodeURIComponent(atob(data))
+    ? (data: string) => atob(data)
     : (data: string) => AES.decrypt(data, saveKey).toString(enc.Utf8))(data);
 }
 
@@ -247,6 +247,8 @@ export class StarterPrefs {
     if (pStr !== StarterPrefers_private_latest) {
       // something changed, store the update
       localStorage.setItem(`starterPrefs_${loggedInUser?.username}`, pStr);
+      // update the latest prefs
+      StarterPrefers_private_latest = pStr;
     }
   }
 }
@@ -466,7 +468,7 @@ export class GameData {
         const lsItemKey = `runHistoryData_${loggedInUser?.username}`;
         const lsItem = localStorage.getItem(lsItemKey);
         if (!lsItem) {
-          localStorage.setItem(lsItemKey, encrypt("", true));
+          localStorage.setItem(lsItemKey, "");
         }
 
         this.trainerId = systemData.trainerId;
@@ -596,7 +598,7 @@ export class GameData {
       if (lsItem) {
         const cachedResponse  = lsItem;
         if (cachedResponse) {
-          const runHistory = JSON.parse(decrypt(cachedResponse, true));
+          const runHistory = JSON.parse(decrypt(cachedResponse, bypassLogin));
           return runHistory;
         }
         return {};
@@ -618,7 +620,7 @@ export class GameData {
       if (lsItem) {
         const cachedResponse = lsItem;
         if (cachedResponse) {
-          const runHistory : RunHistoryData = JSON.parse(decrypt(cachedResponse, true));
+          const runHistory : RunHistoryData = JSON.parse(decrypt(cachedResponse, bypassLogin));
           return runHistory;
         }
         return {};
@@ -639,13 +641,13 @@ export class GameData {
   async saveRunHistory(scene: BattleScene, runEntry : SessionSaveData, isVictory: boolean): Promise<boolean> {
     const runHistoryData = await this.getRunHistoryData(scene);
     // runHistoryData should always return run history or {} empty object
-    const timestamps = Object.keys(runHistoryData);
-    const timestampsNo = timestamps.map(Number);
+    let timestamps = Object.keys(runHistoryData).map(Number);
 
     // Arbitrary limit of 25 entries per user --> Can increase or decrease
     while (timestamps.length >= RUN_HISTORY_LIMIT ) {
-      const oldestTimestamp = Math.min.apply(Math, timestampsNo);
+      const oldestTimestamp = (Math.min.apply(Math, timestamps)).toString();
       delete runHistoryData[oldestTimestamp];
+      timestamps = Object.keys(runHistoryData).map(Number);
     }
 
     const timestamp = (runEntry.timestamp).toString();
@@ -654,7 +656,7 @@ export class GameData {
       isVictory: isVictory,
       isFavorite: false,
     };
-    localStorage.setItem(`runHistoryData_${loggedInUser?.username}`, encrypt(JSON.stringify(runHistoryData), true));
+    localStorage.setItem(`runHistoryData_${loggedInUser?.username}`, encrypt(JSON.stringify(runHistoryData), bypassLogin));
     /**
      * Networking Code DO NOT DELETE
      *
@@ -859,6 +861,14 @@ export class GameData {
 
     const settings = JSON.parse(localStorage.getItem("settings")!); // TODO: is this bang correct?
 
+    // TODO: Remove this block after save migration is implemented
+    if (settings.hasOwnProperty("REROLL_TARGET") && !settings.hasOwnProperty(SettingKeys.Shop_Cursor_Target)) {
+      settings[SettingKeys.Shop_Cursor_Target] = settings["REROLL_TARGET"];
+      delete settings["REROLL_TARGET"];
+      localStorage.setItem("settings", JSON.stringify(settings));
+    }
+    // End of block to remove
+
     for (const setting of Object.keys(settings)) {
       setSetting(this.scene, setting, settings[setting]);
     }
@@ -948,7 +958,7 @@ export class GameData {
     return ret;
   }
 
-  private getSessionSaveData(scene: BattleScene): SessionSaveData {
+  public getSessionSaveData(scene: BattleScene): SessionSaveData {
     return {
       seed: scene.seed,
       playTime: scene.sessionPlayTime,
@@ -1383,8 +1393,7 @@ export class GameData {
       } else {
         const data = localStorage.getItem(dataKey);
         if (data) {
-          handleData(decrypt(data, (dataType !== GameDataType.RUN_HISTORY) ? bypassLogin : true));
-          // This conditional is necessary because at the moment, run history is stored locally only so it has to be decoded from Base64 as if it was local
+          handleData(decrypt(data, bypassLogin));
         }
         resolve(!!data);
       }
@@ -1433,9 +1442,6 @@ export class GameData {
                   const entryKeys = Object.keys(data[key]);
                   valid = ["isFavorite", "isVictory", "entry"].every(v => entryKeys.includes(v)) && entryKeys.length === 3;
                 });
-                if (valid) {
-                  localStorage.setItem(`runHistoryData_${loggedInUser?.username}`, dataStr);
-                }
                 break;
               case GameDataType.SETTINGS:
               case GameDataType.TUTORIALS:
@@ -1507,7 +1513,7 @@ export class GameData {
       };
     }
 
-    const defaultStarterAttr = DexAttr.NON_SHINY | DexAttr.MALE | DexAttr.DEFAULT_VARIANT | DexAttr.DEFAULT_FORM;
+    const defaultStarterAttr = DexAttr.NON_SHINY | DexAttr.MALE | DexAttr.FEMALE | DexAttr.DEFAULT_VARIANT | DexAttr.DEFAULT_FORM;
 
     const defaultStarterNatures: Nature[] = [];
 
@@ -1577,14 +1583,22 @@ export class GameData {
    * @param pokemon
    * @param incrementCount
    * @param fromEgg
-   * @param showNewStarterMessage
+   * @param showMessage
    * @returns - true if Pokemon catch unlocked a new starter, false if Pokemon catch did not unlock a starter
    */
-  setPokemonCaught(pokemon: Pokemon, incrementCount: boolean = true, fromEgg: boolean = false, showNewStarterMessage: boolean = true): Promise<boolean> {
-    return this.setPokemonSpeciesCaught(pokemon, pokemon.species, incrementCount, fromEgg, showNewStarterMessage);
+  setPokemonCaught(pokemon: Pokemon, incrementCount: boolean = true, fromEgg: boolean = false, showMessage: boolean = true): Promise<boolean> {
+    return this.setPokemonSpeciesCaught(pokemon, pokemon.species, incrementCount, fromEgg, showMessage);
   }
 
-  setPokemonSpeciesCaught(pokemon: Pokemon, species: PokemonSpecies, incrementCount: boolean = true, fromEgg: boolean = false, showNewStarterMessage: boolean = true): Promise<boolean> {
+  /**
+   *
+   * @param pokemon
+   * @param incrementCount
+   * @param fromEgg
+   * @param showMessage
+   * @returns - true if Pokemon catch unlocked a new starter, false if Pokemon catch did not unlock a starter
+   */
+  setPokemonSpeciesCaught(pokemon: Pokemon, species: PokemonSpecies, incrementCount: boolean = true, fromEgg: boolean = false, showMessage: boolean = true): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       const dexEntry = this.dexData[species.speciesId];
       const caughtAttr = dexEntry.caughtAttr;
@@ -1643,13 +1657,17 @@ export class GameData {
       const checkPrevolution = (newStarter: boolean) => {
         if (hasPrevolution) {
           const prevolutionSpecies = pokemonPrevolutions[species.speciesId];
-          return this.setPokemonSpeciesCaught(pokemon, getPokemonSpecies(prevolutionSpecies), incrementCount, fromEgg, showNewStarterMessage).then(result => resolve(result));
+          this.setPokemonSpeciesCaught(pokemon, getPokemonSpecies(prevolutionSpecies), incrementCount, fromEgg, showMessage).then(result => resolve(result));
         } else {
           resolve(newStarter);
         }
       };
 
-      if (newCatch && speciesStarters.hasOwnProperty(species.speciesId) && showNewStarterMessage) {
+      if (newCatch && speciesStarters.hasOwnProperty(species.speciesId)) {
+        if (!showMessage) {
+          resolve(true);
+          return;
+        }
         this.scene.playSound("level_up_fanfare");
         this.scene.ui.showText(i18next.t("battle:addedAsAStarter", { pokemonName: species.name }), null, () => checkPrevolution(true), null, true);
       } else {
@@ -1695,7 +1713,14 @@ export class GameData {
     this.starterData[species.speciesId].candyCount += count;
   }
 
-  setEggMoveUnlocked(species: PokemonSpecies, eggMoveIndex: integer, prependSpeciesToMessage: boolean = false): Promise<boolean> {
+  /**
+   *
+   * @param species
+   * @param eggMoveIndex
+   * @param showMessage - Default true. If true, will display message for unlocked egg move
+   * @param prependSpeciesToMessage - Default false. If true, will change message from "X Egg Move Unlocked!" to "Bulbasaur X Egg Move Unlocked!"
+   */
+  setEggMoveUnlocked(species: PokemonSpecies, eggMoveIndex: integer, showMessage: boolean = true, prependSpeciesToMessage: boolean = false): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       const speciesId = species.speciesId;
       if (!speciesEggMoves.hasOwnProperty(speciesId) || !speciesEggMoves[speciesId][eggMoveIndex]) {
@@ -1715,9 +1740,11 @@ export class GameData {
       }
 
       this.starterData[speciesId].eggMoves |= value;
-
+      if (!showMessage) {
+        resolve(true);
+        return;
+      }
       this.scene.playSound("level_up_fanfare");
-
       const moveName = allMoves[speciesEggMoves[speciesId][eggMoveIndex]].name;
       let message = prependSpeciesToMessage ? species.getName() + " " : "";
       message += eggMoveIndex === 3 ? i18next.t("egg:rareEggMoveUnlock", { moveName: moveName }) : i18next.t("egg:eggMoveUnlock", { moveName: moveName });
@@ -1949,6 +1976,7 @@ export class GameData {
   fixStarterData(systemData: SystemSaveData): void {
     for (const starterId of defaultStarterSpecies) {
       systemData.starterData[starterId].abilityAttr |= AbilityAttr.ABILITY_1;
+      systemData.dexData[starterId].caughtAttr |= DexAttr.FEMALE;
     }
   }
 

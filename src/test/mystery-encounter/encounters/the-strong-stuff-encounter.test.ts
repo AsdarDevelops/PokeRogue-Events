@@ -66,7 +66,7 @@ describe("The Strong Stuff - Mystery Encounter", () => {
     await game.runToMysteryEncounter(MysteryEncounterType.THE_STRONG_STUFF, defaultParty);
 
     expect(TheStrongStuffEncounter.encounterType).toBe(MysteryEncounterType.THE_STRONG_STUFF);
-    expect(TheStrongStuffEncounter.encounterTier).toBe(MysteryEncounterTier.COMMON);
+    expect(TheStrongStuffEncounter.encounterTier).toBe(MysteryEncounterTier.GREAT);
     expect(TheStrongStuffEncounter.dialogue).toBeDefined();
     expect(TheStrongStuffEncounter.dialogue.intro).toStrictEqual([{ text: `${namespace}.intro` }]);
     expect(TheStrongStuffEncounter.dialogue.encounterOptionsDialogue?.title).toBe(`${namespace}.title`);
@@ -121,7 +121,7 @@ describe("The Strong Stuff - Mystery Encounter", () => {
             species: getPokemonSpecies(Species.SHUCKLE),
             isBoss: true,
             bossSegments: 5,
-            mysteryEncounterData: new MysteryEncounterPokemonData(1.5),
+            mysteryEncounterData: new MysteryEncounterPokemonData(1.25),
             nature: Nature.BOLD,
             moveSet: [Moves.INFESTATION, Moves.SALT_CURE, Moves.GASTRO_ACID, Moves.HEAL_ORDER],
             modifierConfigs: expect.any(Array),
@@ -152,7 +152,7 @@ describe("The Strong Stuff - Mystery Encounter", () => {
       });
     });
 
-    it("should lower stats of highest BST and raise stats for rest of party", async () => {
+    it("should lower stats of 2 highest BST and raise stats for rest of party", async () => {
       await game.runToMysteryEncounter(MysteryEncounterType.THE_STRONG_STUFF, defaultParty);
 
       const bstsPrior = scene.getParty().map(p => p.getSpeciesForm().getBaseStatTotal());
@@ -165,8 +165,8 @@ describe("The Strong Stuff - Mystery Encounter", () => {
       });
 
       // HP stat changes are halved compared to other values
-      expect(bstsAfter[0]).toEqual(bstsPrior[0] - 20 * 5 - 10);
-      expect(bstsAfter[1]).toEqual(bstsPrior[1] + 10 * 5 + 5);
+      expect(bstsAfter[0]).toEqual(bstsPrior[0] - 15 * 5 - 8);
+      expect(bstsAfter[1]).toEqual(bstsPrior[1] - 15 * 5 - 8);
       expect(bstsAfter[2]).toEqual(bstsPrior[2] + 10 * 5 + 5);
     });
 
@@ -206,7 +206,7 @@ describe("The Strong Stuff - Mystery Encounter", () => {
       expect(scene.getCurrentPhase()?.constructor.name).toBe(CommandPhase.name);
       expect(enemyField.length).toBe(1);
       expect(enemyField[0].species.speciesId).toBe(Species.SHUCKLE);
-      expect(enemyField[0].summonData.battleStats).toEqual([0, 2, 0, 2, 0, 0, 0]);
+      expect(enemyField[0].summonData.statStages).toEqual([0, 2, 0, 2, 0, 0, 0]);
       const shuckleItems = enemyField[0].getHeldItems();
       expect(shuckleItems.length).toBe(4);
       expect(shuckleItems.find(m => m instanceof BerryModifier && m.berryType === BerryType.SITRUS)?.stackCount).toBe(1);
