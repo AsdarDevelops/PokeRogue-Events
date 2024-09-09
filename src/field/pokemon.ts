@@ -202,7 +202,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       this.fusionGender = dataSource.fusionGender;
       this.fusionLuck = dataSource.fusionLuck;
       this.usedTMs = dataSource.usedTMs ?? [];
-      this.mysteryEncounterPokemonData = dataSource.mysteryEncounterPokemonData ?? new MysteryEncounterPokemonData();
+      this.mysteryEncounterPokemonData = new MysteryEncounterPokemonData(dataSource.mysteryEncounterPokemonData);
     } else {
       this.id = Utils.randSeedInt(4294967296);
       this.ivs = ivs || Utils.getIvsFromId(this.id);
@@ -222,6 +222,8 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       if (this.variant === undefined) {
         this.variant = this.shiny ? this.generateVariant() : 0;
       }
+
+      this.mysteryEncounterPokemonData = new MysteryEncounterPokemonData();
 
       if (nature !== undefined) {
         this.setNature(nature);
@@ -250,7 +252,6 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       }
       this.luck = (this.shiny ? this.variant + 1 : 0) + (this.fusionShiny ? this.fusionVariant + 1 : 0);
       this.fusionLuck = this.luck;
-      this.mysteryEncounterPokemonData = new MysteryEncounterPokemonData();
     }
 
     this.generateName();
@@ -547,10 +548,11 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     if (!ignoreOverride && this.summonData?.speciesForm) {
       return this.summonData.speciesForm;
     }
-    if (!this.species.forms?.length) {
-      return this.species;
+    if (this.species.forms && this.species.forms.length > 0) {
+      return this.species.forms[this.formIndex];
     }
-    return this.species.forms[this.formIndex];
+
+    return this.species;
   }
 
   getFusionSpeciesForm(ignoreOverride?: boolean): PokemonSpeciesForm {
@@ -578,8 +580,8 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     const formKey = this.getFormKey();
     if (formKey.indexOf(SpeciesFormKey.GIGANTAMAX) > -1 || formKey.indexOf(SpeciesFormKey.ETERNAMAX) > -1) {
       return 1.5;
-    } else if (!isNullOrUndefined(this.mysteryEncounterPokemonData.spriteScale) && this.mysteryEncounterPokemonData.spriteScale !== 0) {
-      return this.mysteryEncounterPokemonData.spriteScale!;
+    } else if (this.mysteryEncounterPokemonData.spriteScale > 0) {
+      return this.mysteryEncounterPokemonData.spriteScale;
     }
     return 1;
   }
@@ -1013,10 +1015,16 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       : this.moveset;
 
     // Overrides moveset based on arrays specified in overrides.ts
-    const overrideArray: Array<Moves> = this.isPlayer() ? Overrides.MOVESET_OVERRIDE : Overrides.OPP_MOVESET_OVERRIDE;
+    let overrideArray: Moves | Array<Moves> = this.isPlayer() ? Overrides.MOVESET_OVERRIDE : Overrides.OPP_MOVESET_OVERRIDE;
+    if (!Array.isArray(overrideArray)) {
+      overrideArray = [overrideArray];
+    }
     if (overrideArray.length > 0) {
+      if (!this.isPlayer()) {
+        this.moveset = [];
+      }
       overrideArray.forEach((move: Moves, index: number) => {
-        const ppUsed = this.moveset[index]?.ppUsed || 0;
+        const ppUsed = this.moveset[index]?.ppUsed ?? 0;
         this.moveset[index] = new PokemonMove(move, Math.min(ppUsed, allMoves[move].pp));
       });
     }
@@ -1150,7 +1158,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     if (Overrides.OPP_ABILITY_OVERRIDE && !this.isPlayer()) {
       return allAbilities[Overrides.OPP_ABILITY_OVERRIDE];
     }
-    if (this.mysteryEncounterPokemonData?.ability) {
+    if (!isNullOrUndefined(this.mysteryEncounterPokemonData.ability) && this.mysteryEncounterPokemonData.ability !== -1) {
       return allAbilities[this.mysteryEncounterPokemonData.ability];
     }
     if (this.isFusion()) {
@@ -1177,7 +1185,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     if (Overrides.OPP_PASSIVE_ABILITY_OVERRIDE && !this.isPlayer()) {
       return allAbilities[Overrides.OPP_PASSIVE_ABILITY_OVERRIDE];
     }
-    if (this.mysteryEncounterPokemonData?.passive) {
+    if (!isNullOrUndefined(this.mysteryEncounterPokemonData.passive) && this.mysteryEncounterPokemonData.passive !== -1) {
       return allAbilities[this.mysteryEncounterPokemonData.passive];
     }
 
